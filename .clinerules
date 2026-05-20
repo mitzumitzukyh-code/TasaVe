@@ -1,0 +1,64 @@
+# ============================================================
+# CLINE RULES — PROYECTO TASAVE (Actualizado 2025-05-18)
+# Este archivo es leído automáticamente por Cline / Claude Dev
+# ============================================================
+
+## IDENTIDAD
+- Nombre: TasaVe — App Flutter multiplataforma (Android + iOS + Web)
+- Propósito: Consulta de tasa de cambio BCV para Venezuela
+- Backend: Cloudflare Workers + KV (tasave-api)
+- Frontend Web: Cloudflare Pages (tasave-app)
+- URL de producción: https://tasave-app.pages.dev/ (NUNCA cambiar este dominio)
+- Idioma de UI y respuestas: Español (Venezuela)
+- Filosofía de diseño: UI limpia, colores sólidos, funciones simples sin sobrecarga visual
+
+## STACK
+- Flutter 3.x / Dart 3.x
+- State management: SOLO Riverpod
+- HTTP: Dio | Storage: SharedPreferences | Charts: fl_chart
+- Fonts: Bebas Neue (títulos), DM Sans (cuerpo), Space Mono (mono)
+- Ads: google_mobile_ads (AdMob)
+- Deploy web: `npx wrangler pages deploy build/web --project-name=tasave-app`
+- Deploy backend: `npx wrangler deploy` (desde /backend)
+
+## MODELO PRINCIPAL
+```dart
+class TasaModel {
+  final double bcvUsd;      // BCV USD oficial
+  final double bcvEur;      // BCV EUR oficial
+  final double? usdtP2P;    // Binance P2P top 5
+  final double? yadioRate;  // Yadio.io libre
+  final DateTime timestamp;
+  final bool isFromCache;
+  final String? bcvStatus;
+  double get spreadPercent; // (P2P - BCV) / BCV * 100
+}
+```
+
+## PROVIDERS
+- `tasaProvider` → FutureProvider<TasaModel>
+- `historyProvider` → FutureProvider.family<List<TasaHistoryEntry>, int>
+- `accessibilityProvider` → StateNotifierProvider<AccessibilityNotifier, bool>
+- `shellTabProvider` → StateProvider<int>
+- `localStorageProvider` → Provider<LocalStorage>
+- `bcvServiceProvider` → Provider<BcvService>
+
+## REGLAS ABSOLUTAS
+1. NUNCA hardcodear tasas, porcentajes o datos — todo del API
+2. NUNCA inventar valores — sin dato = "—" o "sin datos"
+3. Offline first — cachear en SharedPreferences, mostrar caché sin red
+4. Accesibilidad — textScaler 1.375x global, toggle en ajustes
+5. Colores: bg=#07070A, green=#00E676, red=#FF5252, amber=#FFD740, blue=#448AFF
+6. Fuentes: Bebas Neue, DM Sans, Space Mono — NO CAMBIAR
+7. Errores en español simple, nunca códigos técnicos
+8. Ads SOLO en home_screen — NUNCA en calculator ni remesas
+9. SOLO Riverpod — nunca Provider/Bloc/GetX
+10. Responder siempre en español
+
+## PROHIBICIONES
+- ❌ Hardcodear tasas/spreads/porcentajes
+- ❌ setState en pantallas principales
+- ❌ Ads en calculator o remesas
+- ❌ Cambiar colores/fuentes sin aprobación
+- ❌ Inventar datos falsos
+- ❌ Requests sin fallback a caché

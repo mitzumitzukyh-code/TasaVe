@@ -1,0 +1,50 @@
+{
+    "name": "TasaVe - Tasa BCV Venezuela",
+    "short_name": "TasaVe",
+    "start_url": "/",
+    "id": "/",
+    "display": "standalone",
+    "background_color": "#006847",
+    "theme_color": "#006847",
+    "description": "Consulta la tasa BCV del dólar y euro en tiempo real. Calculadora y historial para Venezuela.",
+    "orientation": "portrait-primary",
+    "prefer_related_applications": false,
+    "categories": [
+        "finance",
+        "utilities"
+    ],
+    "lang": "es",
+    "scope": "/",
+    "screenshots": [
+        {
+            "src": "icons/Icon-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "form_factor": "narrow"
+        }
+    ],
+    "icons": [
+        {
+            "src": "icons/Icon-192.png",
+            "sizes": "192x192",
+            "type": "image/png"
+        },
+        {
+            "src": "icons/Icon-512.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        },
+        {
+            "src": "icons/Icon-maskable-192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "maskable"
+        },
+        {
+            "src": "icons/Icon-maskable-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "maskable"
+        }
+    ]
+}

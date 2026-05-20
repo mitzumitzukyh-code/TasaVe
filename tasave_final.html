@@ -1,0 +1,840 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TasaVe — Mockup Final</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:wght@400;700&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#07070a;--s1:#0d0d11;--s2:#141418;--s3:#1b1b20;--s4:#222228;
+  --border:#28282f;--border2:#36363f;
+  --green:#00e676;--green2:#00c853;--gdim:rgba(0,230,118,.1);--gdim2:rgba(0,230,118,.18);
+  --amber:#ffab00;--adim:rgba(255,171,0,.1);--adim2:rgba(255,171,0,.2);
+  --red:#ff5252;--rdim:rgba(255,82,82,.1);
+  --blue:#40c4ff;--bdim:rgba(64,196,255,.1);
+  --purple:#ce93d8;--pdim:rgba(206,147,216,.1);
+  --text:#eeeef5;--t2:#8888a0;--t3:#444455;--t4:#22222a;
+  --mono:'Space Mono',monospace;--disp:'Bebas Neue',sans-serif;--body:'DM Sans',sans-serif;
+  --r1:10px;--r2:16px;--r3:22px;--r4:28px;
+}
+html{scroll-behavior:smooth}
+body{background:var(--bg);font-family:var(--body);color:var(--text);min-height:100vh;overflow-x:hidden}
+::-webkit-scrollbar{width:3px;height:3px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+
+/* TOP HEADER */
+.hdr{
+  background:rgba(7,7,10,.92);backdrop-filter:blur(16px);
+  border-bottom:1px solid var(--border);
+  padding:0 32px;
+  display:flex;align-items:stretch;justify-content:space-between;
+  position:sticky;top:0;z-index:200;height:60px;
+}
+.hdr-brand{display:flex;align-items:center;gap:14px}
+.logo{font-family:var(--disp);font-size:28px;letter-spacing:3px}
+.logo span{color:var(--green)}
+.hdr-ver{font-family:var(--mono);font-size:8px;letter-spacing:2px;color:var(--t3);padding:3px 8px;border:1px solid var(--border);border-radius:4px}
+.hdr-nav{display:flex;align-items:stretch;gap:0}
+.hn{
+  display:flex;align-items:center;padding:0 20px;
+  font-family:var(--mono);font-size:10px;letter-spacing:2px;color:var(--t3);
+  cursor:pointer;border-bottom:2px solid transparent;
+  transition:all .15s;text-transform:uppercase;border-top:none;background:none;border-left:none;border-right:none;
+}
+.hn:hover{color:var(--text)}
+.hn.on{color:var(--green);border-bottom-color:var(--green)}
+
+/* SUBNAV */
+.subnav{
+  background:var(--s1);border-bottom:1px solid var(--border);
+  display:flex;padding:0 32px;overflow-x:auto;
+  position:sticky;top:60px;z-index:190;
+}
+.sn{
+  font-family:var(--mono);font-size:9px;letter-spacing:2px;color:var(--t3);
+  padding:10px 16px;border:none;background:none;cursor:pointer;
+  border-bottom:1.5px solid transparent;white-space:nowrap;transition:all .15s;text-transform:uppercase;
+}
+.sn:hover{color:var(--text)}
+.sn.on{color:var(--green);border-bottom-color:var(--green)}
+
+/* SECTIONS */
+.sec{display:none}
+.sec.on{display:block}
+
+/* WRAP */
+.wrap{max-width:1200px;margin:0 auto;padding:48px 32px}
+.sec-lbl{
+  font-family:var(--mono);font-size:9px;letter-spacing:3px;color:var(--t3);
+  margin-bottom:32px;text-transform:uppercase;
+  display:flex;align-items:center;gap:14px;
+}
+.sec-lbl::after{content:'';flex:1;height:1px;background:var(--border)}
+
+/* PHONE */
+.phone{
+  width:315px;flex-shrink:0;
+  background:var(--bg);
+  border:1.5px solid var(--border2);border-radius:46px;
+  overflow:hidden;
+  box-shadow:0 0 0 7px var(--s1),0 40px 100px rgba(0,0,0,.7);
+  position:relative;
+}
+.phone::before{
+  content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);
+  width:72px;height:5px;background:var(--border2);border-radius:0 0 8px 8px;z-index:10;
+}
+.ph-status{display:flex;justify-content:space-between;align-items:center;padding:16px 22px 6px;font-family:var(--mono);font-size:9px;color:var(--t3)}
+.ph-body{display:flex;flex-direction:column;min-height:620px}
+.ph-scroll{flex:1;overflow-y:auto;overflow-x:hidden}
+
+/* APP BAR */
+.ab{display:flex;justify-content:space-between;align-items:center;padding:6px 18px 8px}
+.ab-logo{font-family:var(--disp);font-size:24px;letter-spacing:2px}
+.ab-logo span{color:var(--green)}
+.ab-acts{display:flex;gap:7px}
+.ab-btn{width:30px;height:30px;border-radius:50%;background:var(--s3);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:11px;cursor:pointer}
+
+/* BOTTOM NAV */
+.bnav{display:flex;border-top:1px solid var(--border);padding:8px 0 16px;margin-top:auto}
+.bi{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;font-family:var(--mono);font-size:7px;color:var(--t3);letter-spacing:.5px;cursor:pointer;transition:color .15s;padding-top:4px}
+.bi.on{color:var(--green)}
+.bi-bar{width:16px;height:2px;background:currentColor;border-radius:1px}
+
+/* CARDS */
+.card{background:var(--s2);border:1px solid var(--border);border-radius:var(--r3);padding:16px;position:relative;overflow:hidden;margin:6px 13px}
+.card-sm{background:var(--s2);border:1px solid var(--border);border-radius:var(--r2);padding:13px;margin:6px 13px}
+.card-g{background:var(--gdim);border:1px solid var(--green);border-radius:var(--r2);padding:13px;margin:6px 13px}
+.card-a{background:var(--adim);border:1px solid var(--amber);border-radius:var(--r2);padding:13px;margin:6px 13px}
+.card-b{background:var(--bdim);border:1px solid var(--blue);border-radius:var(--r2);padding:13px;margin:6px 13px}
+
+/* TYPO */
+.lbl{font-family:var(--mono);font-size:8px;letter-spacing:2px;color:var(--t3);text-transform:uppercase}
+.rate-xl{font-family:var(--disp);font-size:58px;line-height:1;letter-spacing:1px}
+.rate-lg{font-family:var(--disp);font-size:30px;line-height:1}
+.rate-md{font-family:var(--disp);font-size:20px;line-height:1}
+.up{color:var(--green)}.dn{color:var(--red)}.amb{color:var(--amber)}.blu{color:var(--blue)}.dim{color:var(--t2)}
+
+/* LIVE DOT */
+.live{display:inline-flex;align-items:center;gap:5px;font-family:var(--mono);font-size:8px;color:var(--green);letter-spacing:2px}
+.dot{width:5px;height:5px;border-radius:50%;background:var(--green);animation:pulse 1.5s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.3;transform:scale(1.5)}}
+
+/* MINI GRID */
+.mgrid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin:6px 13px}
+.mc{background:var(--s2);border:1px solid var(--border);border-radius:var(--r2);padding:11px 12px}
+.pip{display:inline-block;width:5px;height:5px;border-radius:50%;margin-right:5px;vertical-align:1px}
+
+/* SPREAD ROW */
+.spread{margin:6px 13px;background:var(--adim2);border:1px solid var(--amber);border-radius:var(--r2);padding:11px 14px;display:flex;justify-content:space-between;align-items:center}
+.alert-row{margin:6px 13px;background:var(--s2);border:1px solid var(--border);border-radius:var(--r2);padding:10px 14px;display:flex;justify-content:space-between;align-items:center}
+.prem{font-family:var(--mono);font-size:8px;color:#050505;background:var(--green);padding:2px 8px;border-radius:100px;letter-spacing:1px;font-weight:700}
+
+/* AD SLOT */
+.ad{
+  border:1.5px dashed var(--border2);border-radius:var(--r1);
+  display:flex;align-items:center;justify-content:center;flex-direction:column;gap:4px;
+  background:var(--s1);position:relative;overflow:hidden;margin:6px 13px;
+}
+.ad::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(45deg,transparent,transparent 8px,rgba(255,255,255,.012) 8px,rgba(255,255,255,.012) 16px)}
+.ad-tag{position:absolute;top:5px;right:7px;font-family:var(--mono);font-size:7px;color:var(--t3);background:var(--border);padding:2px 5px;border-radius:3px;letter-spacing:1px}
+.ad-lbl{font-family:var(--mono);font-size:8px;color:var(--t3);letter-spacing:2px;z-index:1}
+.ad-sz{font-family:var(--mono);font-size:7px;color:var(--t4);z-index:1}
+
+/* CALC */
+.ctabs{display:flex;margin:6px 13px;background:var(--s3);border-radius:var(--r1);padding:3px;gap:2px}
+.ct{flex:1;text-align:center;font-family:var(--mono);font-size:8px;padding:6px;border-radius:8px;cursor:pointer;color:var(--t3);letter-spacing:.5px;transition:all .15s}
+.ct.on{background:var(--s4);color:var(--green)}
+.inp{margin:6px 13px;background:var(--s3);border:1px solid var(--border2);border-radius:var(--r2);padding:11px 15px;display:flex;justify-content:space-between;align-items:center}
+.res{margin:5px 13px;background:var(--s2);border:1px solid var(--border);border-radius:var(--r2);padding:12px 15px}
+.res-g{margin:5px 13px;background:var(--gdim);border:1px solid var(--green);border-radius:var(--r2);padding:12px 15px}
+.kp{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin:5px 13px 8px}
+.k{background:var(--s3);border-radius:var(--r1);padding:11px 0;text-align:center;font-family:var(--disp);font-size:18px;color:var(--text);cursor:pointer;border:1px solid var(--border);user-select:none;transition:all .1s}
+.k:active{transform:scale(.95);background:var(--s4)}
+.k.src{font-size:8px;font-family:var(--mono);letter-spacing:.5px;color:var(--t2);padding:7px 0}
+.k.eq{background:var(--green);color:#050505;border-color:var(--green)}
+
+/* CHART */
+.chart-wrap{margin:6px 13px;background:var(--s2);border:1px solid var(--border);border-radius:var(--r3);padding:13px;height:170px;position:relative;overflow:hidden}
+.chart-hdr{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px}
+.legend{display:flex;flex-direction:column;gap:4px;align-items:flex-end}
+.leg{font-family:var(--mono);font-size:7px;color:var(--t2);display:flex;align-items:center;gap:4px}
+.leg-line{width:12px;height:1.5px;background:var(--green)}
+.leg-dash{width:12px;height:1.5px;background:repeating-linear-gradient(90deg,var(--amber) 0,var(--amber) 3px,transparent 3px,transparent 6px)}
+svg.chart{position:absolute;bottom:0;left:0;width:100%;height:85px}
+.ptabs{display:flex;gap:4px;margin:6px 13px 0}
+.pt{font-family:var(--mono);font-size:8px;letter-spacing:1px;padding:4px 9px;border-radius:7px;border:1px solid var(--border);color:var(--t3);cursor:pointer;background:none;transition:all .15s}
+.pt.on{background:var(--s3);color:var(--green);border-color:var(--green)}
+.daily{margin:0 13px}
+.dr{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)}
+.dr:last-child{border:none}
+.dr-d{font-family:var(--mono);font-size:8px;color:var(--t3)}
+.dr-v{font-family:var(--mono);font-size:11px;color:var(--text);font-weight:700}
+.dr-c{font-family:var(--mono);font-size:9px}
+
+/* DIASPORA */
+.chips{display:flex;flex-wrap:wrap;gap:5px;margin:5px 0}
+.chip{font-family:var(--mono);font-size:8px;padding:4px 10px;border-radius:100px;border:1px solid var(--border);color:var(--t3);cursor:pointer;letter-spacing:.5px;transition:all .15s}
+.chip.on{background:var(--gdim);border-color:var(--green);color:var(--green)}
+.bkdn{margin:6px 13px;background:var(--s2);border:1px solid var(--border);border-radius:var(--r2);padding:11px 13px}
+.br{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border)}
+.br:last-child{border:none;padding-top:7px}
+.br-l{font-size:10px;color:var(--t2)}
+.br-v{font-family:var(--mono);font-size:10px;color:var(--text);font-weight:700}
+.br-v.neg{color:var(--red)}.br-v.big{font-family:var(--disp);font-size:20px;color:var(--green)}
+.cmpt{margin:5px 13px;border:1px solid var(--border);border-radius:var(--r2);overflow:hidden}
+.cmpr{display:flex;justify-content:space-between;align-items:center;padding:9px 13px;border-bottom:1px solid var(--border)}
+.cmpr:last-child{border:none}
+.cmpr.best{background:var(--gdim)}
+.cmp-p{font-size:10px;color:var(--t2)}
+.cmp-v{font-family:var(--disp);font-size:16px}
+
+/* ALERTS */
+.af{margin:0 13px;display:flex;flex-direction:column;gap:5px}
+.ac{border-radius:var(--r2);padding:11px;position:relative}
+.ac.urg{background:var(--adim2);border:1px solid var(--amber)}
+.ac.inf{background:var(--s2);border:1px solid var(--border)}
+.ac.suc{background:var(--gdim);border:1px solid var(--green)}
+.ac.bld{background:var(--bdim);border:1px solid var(--blue)}
+.a-ico{font-size:14px;margin-bottom:4px}
+.a-t{font-size:11px;color:var(--text);font-weight:600;margin-bottom:1px}
+.a-d{font-size:9px;color:var(--t2);font-family:var(--mono);line-height:1.5}
+.a-tm{position:absolute;top:9px;right:10px;font-family:var(--mono);font-size:7px;color:var(--t3)}
+.tgl{margin:0 13px}
+.tr{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border)}
+.tr:last-child{border:none}
+.tl{font-size:11px;color:var(--text)}
+.ts{font-size:9px;color:var(--t2);margin-top:2px;font-family:var(--mono)}
+.sw{width:38px;height:20px;border-radius:10px;background:var(--s4);border:1px solid var(--border);position:relative;cursor:pointer;flex-shrink:0;transition:background .2s}
+.sw.on{background:var(--green)}.sw.on-a{background:var(--amber)}
+.th{position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;background:var(--t3);transition:all .2s}
+.sw.on .th,.sw.on-a .th{left:20px;background:#050505}
+
+/* WIDGET */
+.wf{background:#12121e;border-radius:26px;padding:18px}
+.wc{background:var(--s3);border:1px solid var(--border2);border-radius:16px;padding:13px 15px;min-height:110px}
+.wb{font-family:var(--mono);font-size:7px;color:var(--green);letter-spacing:2px;margin-bottom:7px;display:flex;align-items:center;gap:5px}
+.wl{width:5px;height:5px;border-radius:50%;background:var(--green);animation:pulse 1.5s infinite}
+.wm{font-family:var(--disp);font-size:36px;color:var(--text);line-height:1}
+.wch{font-family:var(--mono);font-size:8px;color:var(--green);margin-top:3px}
+.wmeta{font-family:var(--mono);font-size:7px;color:var(--t3);margin-top:7px;display:flex;justify-content:space-between}
+.wg3{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:5px}
+.wi-l{font-family:var(--mono);font-size:6px;color:var(--t3);letter-spacing:1px}
+.wi-v{font-family:var(--disp);font-size:18px;color:var(--text);margin-top:2px}
+.wi-c{font-family:var(--mono);font-size:7px}
+
+/* LAYOUT */
+.row{display:flex;gap:40px;align-items:flex-start}
+.side{flex:1;min-width:0}
+.sp{background:var(--s2);border:1px solid var(--border);border-radius:var(--r3);padding:22px;margin-bottom:14px}
+.sp:last-child{margin-bottom:0}
+.sp-t{font-size:13px;font-weight:600;color:var(--text);margin-bottom:8px}
+.sp-b{font-size:12px;color:var(--t2);line-height:1.8}
+.sp-b strong{color:var(--text)}
+.sp-b .g{color:var(--green)}.sp-b .a{color:var(--amber)}.sp-b .r{color:var(--red)}.sp-b .b{color:var(--blue)}
+.ins{display:flex;gap:10px;align-items:flex-start;margin-bottom:12px}
+.ins:last-child{margin-bottom:0}
+.in{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:9px;flex-shrink:0}
+.ib-t{font-size:12px;font-weight:600;color:var(--text);margin-bottom:2px}
+.ib-d{font-size:11px;color:var(--t2);line-height:1.6}
+
+/* TUTORIAL */
+.hero{text-align:center;padding:80px 40px 60px;border-bottom:1px solid var(--border)}
+.hero-badge{display:inline-block;font-family:var(--mono);font-size:8px;letter-spacing:3px;color:var(--green);border:1px solid var(--green);padding:4px 14px;border-radius:100px;margin-bottom:22px}
+.hero-h1{font-family:var(--disp);font-size:86px;letter-spacing:5px;color:var(--text);line-height:1}
+.hero-h1 span{color:var(--green)}
+.hero-sub{font-size:15px;color:var(--t2);margin-top:14px;max-width:460px;margin-left:auto;margin-right:auto;line-height:1.7}
+.hero-disc{font-family:var(--mono);font-size:8px;color:var(--t3);margin-top:24px;padding:7px 18px;border:1px solid var(--border);border-radius:100px;display:inline-block;letter-spacing:.5px}
+
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px;max-width:960px;margin:0 auto 48px}
+.step{background:var(--s2);border:1px solid var(--border);border-radius:var(--r3);padding:24px;position:relative;overflow:hidden;transition:border-color .2s}
+.step:hover{border-color:var(--border2)}
+.st-n{font-family:var(--disp);font-size:72px;color:var(--border);position:absolute;top:-8px;right:14px;line-height:1;pointer-events:none}
+.st-ico{font-size:26px;margin-bottom:12px}
+.st-t{font-size:13px;font-weight:600;color:var(--text);margin-bottom:6px}
+.st-d{font-size:11px;color:var(--t2);line-height:1.7}
+.st-tag{display:inline-block;font-family:var(--mono);font-size:7px;letter-spacing:1px;padding:3px 8px;border-radius:100px;margin-top:10px}
+.tag-f{background:var(--gdim);color:var(--green);border:1px solid var(--green)}
+.tag-p{background:var(--adim);color:var(--amber);border:1px solid var(--amber)}
+
+.feats{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:10px;max-width:960px;margin:0 auto 48px}
+.feat{background:var(--s2);border:1px solid var(--border);border-radius:var(--r2);padding:18px 20px;display:flex;gap:13px;align-items:flex-start}
+.feat-ico{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
+.feat-t{font-size:12px;font-weight:600;color:var(--text);margin-bottom:3px}
+.feat-d{font-size:11px;color:var(--t2);line-height:1.6}
+
+.disc-box{max-width:680px;margin:0 auto;background:var(--bdim);border:1px solid var(--blue);border-radius:var(--r2);padding:16px 20px;display:flex;gap:12px}
+.disc-ico{font-size:16px;flex-shrink:0;margin-top:1px}
+.disc-t{font-size:12px;color:var(--blue);font-weight:600;margin-bottom:3px}
+.disc-d{font-size:11px;color:var(--t2);line-height:1.7;font-family:var(--mono)}
+
+/* ADS */
+.ads-intro{background:var(--s2);border:1px solid var(--border);border-radius:var(--r3);padding:26px;margin-bottom:28px}
+.ad-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px;margin-bottom:28px}
+.adc{background:var(--s2);border:1px solid var(--border);border-radius:var(--r2);padding:16px;transition:border-color .2s}
+.adc:hover{border-color:var(--border2)}
+.adc-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.adc-n{font-size:12px;font-weight:600;color:var(--text)}
+.adc-r{font-family:var(--mono);font-size:8px}
+.adc-d{font-size:11px;color:var(--t2);line-height:1.6;margin-bottom:8px}
+.rev-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+.rv{background:var(--s3);border-radius:var(--r1);padding:13px}
+.rv-lbl{font-family:var(--mono);font-size:8px;color:var(--t3);letter-spacing:1px;margin-bottom:3px}
+.rv-v{font-family:var(--disp);font-size:26px}
+.rv-sub{font-family:var(--mono);font-size:7px;color:var(--t3)}
+
+@media(max-width:860px){
+  .row{flex-direction:column}
+  .phone{width:100%;max-width:315px;margin:0 auto}
+  .hero-h1{font-size:54px}
+  .wrap{padding:28px 16px}
+  .hdr{padding:0 16px}
+  .subnav{padding:0 16px}
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="hdr">
+  <div class="hdr-brand">
+    <div class="logo">TASA<span>VE</span></div>
+    <div class="hdr-ver">V3.1 FINAL</div>
+  </div>
+  <div class="hdr-nav">
+    <button class="hn on" onclick="main('tut',this)">Tutorial</button>
+    <button class="hn" onclick="main('app',this)">App</button>
+    <button class="hn" onclick="main('ads',this)">Anuncios</button>
+  </div>
+</header>
+
+<!-- ══════════════════════════ TUTORIAL ══════════════════════════ -->
+<div id="s-tut" class="sec on">
+  <div class="hero">
+    <div class="hero-badge">TUTORIAL DE PRODUCTO</div>
+    <div class="hero-h1">TASA<span>VE</span></div>
+    <p class="hero-sub">El monitor de tasa de cambio más completo de Venezuela. BCV oficial, mercado paralelo, calculadora, historial con gráficas y simulador de remesas — todo en una app.</p>
+    <div class="hero-disc">⚖️ &nbsp;Las tasas de referencia son solo informativas y no constituyen oferta de cambio · Ley del Régimen Cambiario</div>
+  </div>
+
+  <div class="wrap">
+    <div class="sec-lbl">Cómo funciona</div>
+    <div class="steps">
+      <div class="step"><div class="st-n">1</div><div class="st-ico">📡</div><div class="st-t">Abre la app</div><div class="st-d">Ves al instante la tasa BCV oficial junto con P2P, Binance y Yadio. Un solo vistazo, toda la información.</div><span class="st-tag tag-f">GRATIS</span></div>
+      <div class="step"><div class="st-n">2</div><div class="st-ico">🧮</div><div class="st-t">Calcula al instante</div><div class="st-d">Ingresa cualquier monto. Obtienes el resultado en BCV y P2P simultáneamente — la diferencia es visible de inmediato.</div><span class="st-tag tag-f">GRATIS</span></div>
+      <div class="step"><div class="st-n">3</div><div class="st-ico">📈</div><div class="st-t">Analiza el historial</div><div class="st-d">Gráfica interactiva de 7, 30, 90 días o 1 año. Doble línea BCV vs P2P para ver cómo evoluciona el spread.</div><span class="st-tag tag-f">GRATIS</span></div>
+      <div class="step"><div class="st-n">4</div><div class="st-ico">✈️</div><div class="st-t">Simula remesas</div><div class="st-d">Compara Zinli, Zelle, Binance y más. Ve exactamente cuántos bolívares llegan con cada plataforma.</div><span class="st-tag tag-f">GRATIS</span></div>
+      <div class="step"><div class="st-n">5</div><div class="st-ico">⚡</div><div class="st-t">Alertas inteligentes</div><div class="st-d">No solo "cambió el precio" — TasaVe detecta velocidades inusuales de cambio y spread máximos históricos.</div><span class="st-tag tag-p">PREMIUM</span></div>
+      <div class="step"><div class="st-n">6</div><div class="st-ico">🟩</div><div class="st-t">Widget en pantalla</div><div class="st-d">BCV + P2P + Yadio en tu pantalla de inicio sin abrir nada. Actualización automática cada 2 minutos.</div><span class="st-tag tag-p">PREMIUM</span></div>
+    </div>
+
+    <div class="sec-lbl">Lo que hace diferente a TasaVe</div>
+    <div class="feats">
+      <div class="feat"><div class="feat-ico" style="background:var(--gdim)">📊</div><div><div class="feat-t">Spread BCV vs Paralelo visible</div><div class="feat-d">Muestra en tiempo real cuánto corre el mercado por encima del oficial. Ninguna otra app lo hace en pantalla principal.</div></div></div>
+      <div class="feat"><div class="feat-ico" style="background:var(--adim)">⚡</div><div><div class="feat-t">Alertas de ritmo, no solo precio</div><div class="feat-d">"Subió 3% en 1 hora, velocidad 4× el promedio" es más útil que "cambió a 75.00". Información con contexto.</div></div></div>
+      <div class="feat"><div class="feat-ico" style="background:var(--bdim)">✈️</div><div><div class="feat-t">Simulador de remesas real</div><div class="feat-d">Para la diáspora venezolana. Compara plataformas con comisiones reales y ve exactamente cuántos Bs llegan.</div></div></div>
+      <div class="feat"><div class="feat-ico" style="background:var(--pdim)">🟩</div><div><div class="feat-t">Widget nativo Android</div><div class="feat-d">La única app del nicho con widget bien implementado. La tasa en tu pantalla de inicio, siempre actualizada.</div></div></div>
+      <div class="feat"><div class="feat-ico" style="background:var(--gdim)">📉</div><div><div class="feat-t">Doble gráfica BCV + P2P</div><div class="feat-d">Historial interactivo con ambas líneas. Ve cómo evoluciona el spread a lo largo del tiempo en un solo gráfico.</div></div></div>
+      <div class="feat"><div class="feat-ico" style="background:var(--adim)">🔢</div><div><div class="feat-t">Calculadora con resultado doble</div><div class="feat-d">Ingresa un monto y obtienes simultáneamente el equivalente en BCV y en P2P. La diferencia, visible al instante.</div></div></div>
+    </div>
+
+    <div class="sec-lbl">Marco legal</div>
+    <div class="disc-box">
+      <div class="disc-ico">⚖️</div>
+      <div>
+        <div class="disc-t">Aviso legal integrado en la app</div>
+        <div class="disc-d">Las tasas de referencia de mercado (USDT P2P, Yadio, Binance) mostradas en TasaVe son exclusivamente con fines informativos. No constituyen oferta, solicitud ni facilitación de operaciones de cambio de divisas. La tasa oficial es la publicada por el Banco Central de Venezuela (BCV). TasaVe no realiza ni intermedia operaciones cambiarias.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════ APP ══════════════════════════ -->
+<div id="s-app" class="sec">
+  <nav class="subnav" id="appnav">
+    <button class="sn on" onclick="sub('home',this)">Inicio</button>
+    <button class="sn" onclick="sub('calc',this)">Calculadora</button>
+    <button class="sn" onclick="sub('hist',this)">Historial</button>
+    <button class="sn" onclick="sub('remesas',this)">Remesas</button>
+    <button class="sn" onclick="sub('alertas',this)">Alertas</button>
+    <button class="sn" onclick="sub('widgets',this)">Widgets</button>
+  </nav>
+
+  <!-- HOME -->
+  <div id="ap-home" class="sec on">
+    <div class="wrap">
+      <div class="sec-lbl">Inicio — Tasa principal</div>
+      <div class="row">
+        <div class="phone">
+          <div class="ph-body">
+            <div class="ph-status"><span>9:41</span><span style="font-family:var(--mono);font-size:9px">▲▲▲ ⚡ ●●</span></div>
+            <div class="ab">
+              <div class="ab-logo">TASA<span>VE</span></div>
+              <div class="ab-acts"><div class="ab-btn">🔔</div><div class="ab-btn">⚙</div></div>
+            </div>
+
+            <div class="ad" style="height:46px">
+              <div class="ad-tag">ADMOB</div>
+              <div class="ad-lbl">BANNER 320×50</div>
+              <div class="ad-sz">Smart Banner · usuarios gratuitos</div>
+            </div>
+
+            <div class="card">
+              <div class="live"><div class="dot"></div>BCV OFICIAL</div>
+              <div class="lbl" style="margin-top:5px">TASA DEL DÍA</div>
+              <div style="display:flex;align-items:baseline;gap:4px;margin-top:2px">
+                <div class="rate-xl">72.84</div>
+                <div style="font-family:var(--mono);font-size:12px;color:var(--t2)">Bs/$</div>
+              </div>
+              <div style="display:flex;align-items:center;gap:10px;margin-top:6px">
+                <span class="up" style="font-family:var(--mono);font-size:10px">▲ +0.42%</span>
+                <span style="font-family:var(--mono);font-size:8px;color:var(--t3)">hace 14 min</span>
+              </div>
+              <svg viewBox="0 0 260 36" style="width:100%;height:36px;margin-top:8px">
+                <path fill="rgba(0,230,118,.08)" d="M0,28 C30,26 55,23 80,20 S115,17 145,14 S185,10 215,7 S240,5 260,3 L260,36 L0,36Z"/>
+                <path fill="none" stroke="var(--green)" stroke-width="1.4" d="M0,28 C30,26 55,23 80,20 S115,17 145,14 S185,10 215,7 S240,5 260,3"/>
+              </svg>
+            </div>
+
+            <div class="mgrid">
+              <div class="mc"><div class="lbl"><span class="pip" style="background:var(--green)"></span>USDT P2P</div><div class="rate-md" style="margin-top:5px">75.10</div><div class="up" style="font-family:var(--mono);font-size:8px;margin-top:2px">+0.61% hoy</div></div>
+              <div class="mc"><div class="lbl"><span class="pip" style="background:var(--amber)"></span>BINANCE</div><div class="rate-md" style="margin-top:5px">75.22</div><div class="up" style="font-family:var(--mono);font-size:8px;margin-top:2px">+0.55% hoy</div></div>
+              <div class="mc"><div class="lbl"><span class="pip" style="background:var(--blue)"></span>YADIO</div><div class="rate-md" style="margin-top:5px">75.08</div><div class="dn" style="font-family:var(--mono);font-size:8px;margin-top:2px">-0.12% hoy</div></div>
+              <div class="mc"><div class="lbl"><span class="pip" style="background:var(--purple)"></span>EURO BCV</div><div class="rate-md" style="margin-top:5px">79.63</div><div class="up" style="font-family:var(--mono);font-size:8px;margin-top:2px">+0.28% hoy</div></div>
+            </div>
+
+            <div class="spread">
+              <div>
+                <div style="font-size:11px;color:var(--amber);font-weight:600">Spread BCV vs Paralelo</div>
+                <div style="font-size:9px;color:var(--t2);margin-top:2px">Paralelo corre por encima del oficial</div>
+              </div>
+              <div class="rate-lg amb">+3.1%</div>
+            </div>
+
+            <div class="alert-row">
+              <div>
+                <div style="font-size:11px;color:var(--text);font-weight:500">Alerta inteligente activa</div>
+                <div style="font-family:var(--mono);font-size:8px;color:var(--t2);margin-top:2px">Ritmo: +0.8% / hora — inusual</div>
+              </div>
+              <div class="prem">PREMIUM</div>
+            </div>
+
+            <div class="bnav">
+              <div class="bi on"><div class="bi-bar"></div>INICIO</div>
+              <div class="bi"><div class="bi-bar"></div>CALCULAR</div>
+              <div class="bi"><div class="bi-bar"></div>HIST</div>
+              <div class="bi"><div class="bi-bar"></div>REMESAS</div>
+              <div class="bi"><div class="bi-bar"></div>ALERTAS</div>
+            </div>
+          </div>
+        </div>
+        <div class="side">
+          <div class="sp">
+            <div class="sp-t">🎯 Pantalla principal — Decisiones de diseño</div>
+            <div class="sp-b">
+              <div class="ins"><div class="in" style="background:var(--gdim);border:1px solid var(--green);color:var(--green)">01</div><div><div class="ib-t">Tasa BCV como héroe</div><div class="ib-d">Bebas Neue 58px — el usuario sabe en 0.5 segundos. Imposible de ignorar.</div></div></div>
+              <div class="ins"><div class="in" style="background:var(--adim);border:1px solid var(--amber);color:var(--amber)">02</div><div><div class="ib-t">Spread en pantalla principal</div><div class="ib-d">Diferenciador único — ningún competidor venezolano lo muestra aquí.</div></div></div>
+              <div class="ins"><div class="in" style="background:var(--gdim);border:1px solid var(--green);color:var(--green)">03</div><div><div class="ib-t">Sparkline integrada en la card</div><div class="ib-d">Tendencia del día sin ir a historial. Micro-gráfica que habla sola.</div></div></div>
+              <div class="ins" style="margin-bottom:0"><div class="in" style="background:var(--s3);border:1px solid var(--border2);color:var(--t2)">04</div><div><div class="ib-t">Banner AdMob preparado</div><div class="ib-d">320×50 sobre referencias. <span class="g">Oculto en premium</span>, activo en free.</div></div></div>
+            </div>
+          </div>
+          <div class="sp">
+            <div class="sp-t">💡 Estrategia del banner en Home</div>
+            <div class="sp-b">El banner top tiene el CTR más alto en apps de finanzas — posición premium antes del scroll sin interferir con la tasa principal. Free lo ve, premium nunca lo ve.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CALCULADORA -->
+  <div id="ap-calc" class="sec">
+    <div class="wrap">
+      <div class="sec-lbl">Calculadora — Conversión en tiempo real</div>
+      <div class="row">
+        <div class="phone">
+          <div class="ph-body">
+            <div class="ph-status"><span>9:41</span><span style="font-family:var(--mono);font-size:9px">▲▲▲</span></div>
+            <div class="ab"><div class="ab-logo">TASA<span>VE</span></div></div>
+            <div class="ctabs">
+              <div class="ct on">$ → Bs</div>
+              <div class="ct">Bs → $</div>
+              <div class="ct">Histórico</div>
+            </div>
+            <div class="inp">
+              <div><div class="lbl">USD</div></div>
+              <div class="rate-lg">250.00</div>
+            </div>
+            <div class="res">
+              <div class="lbl">TASA APLICADA · BCV 72.84</div>
+              <div style="display:flex;align-items:baseline;gap:3px;margin-top:4px">
+                <div class="rate-lg">18,210</div>
+                <div style="font-family:var(--mono);font-size:13px;color:var(--t2)">.00 Bs</div>
+              </div>
+            </div>
+            <div class="res-g">
+              <div class="lbl" style="color:var(--green)">CON USDT P2P · 75.10</div>
+              <div style="display:flex;align-items:baseline;gap:3px;margin-top:4px">
+                <div class="rate-lg" style="color:var(--green)">18,775</div>
+                <div style="font-family:var(--mono);font-size:13px;color:var(--green)">.00 Bs</div>
+              </div>
+              <div style="font-family:var(--mono);font-size:9px;color:var(--green);margin-top:4px">▲ +565 Bs más usando P2P</div>
+            </div>
+            <div class="ad" style="height:56px">
+              <div class="ad-tag">ADMOB</div>
+              <div class="ad-lbl">NATIVE SMALL</div>
+              <div class="ad-sz">Entre resultados y teclado · máx atención</div>
+            </div>
+            <div class="kp">
+              <div class="k">7</div><div class="k">8</div><div class="k">9</div><div class="k src">BCV</div>
+              <div class="k">4</div><div class="k">5</div><div class="k">6</div><div class="k src">P2P</div>
+              <div class="k">1</div><div class="k">2</div><div class="k">3</div><div class="k src">Yadio</div>
+              <div class="k src">.</div><div class="k">0</div><div class="k src">⌫</div><div class="k eq">=</div>
+            </div>
+            <div class="bnav">
+              <div class="bi"><div class="bi-bar"></div>INICIO</div>
+              <div class="bi on"><div class="bi-bar"></div>CALCULAR</div>
+              <div class="bi"><div class="bi-bar"></div>HIST</div>
+              <div class="bi"><div class="bi-bar"></div>REMESAS</div>
+              <div class="bi"><div class="bi-bar"></div>ALERTAS</div>
+            </div>
+          </div>
+        </div>
+        <div class="side">
+          <div class="sp">
+            <div class="sp-t">🧮 Por qué esta UX gana</div>
+            <div class="sp-b">El <strong>resultado doble simultáneo</strong> (BCV + P2P en la misma pantalla) es el feature más útil del nicho. El usuario ve de inmediato cuánto pierde usando solo BCV.<br><br>El teclado tiene <span class="a">accesos directos de fuente</span> — el usuario cambia entre BCV, P2P y Yadio sin salir del flujo de cálculo.<br><br>El resultado P2P en <span class="g">verde con diferencia positiva</span> es psicológicamente motivador — el usuario siente que ganó.</div>
+          </div>
+          <div class="sp">
+            <div class="sp-t">💰 Native Ad en calculadora</div>
+            <div class="sp-b">El ad nativo entre resultados y teclado aprovecha el <strong>momento de mayor atención</strong>: el usuario acaba de calcular y está procesando el número. <span class="g">CTR esperado 2–4× el banner estándar</span> en este contexto.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- HISTORIAL -->
+  <div id="ap-hist" class="sec">
+    <div class="wrap">
+      <div class="sec-lbl">Historial — Doble gráfica BCV + P2P</div>
+      <div class="row">
+        <div class="phone">
+          <div class="ph-body">
+            <div class="ph-status"><span>9:41</span><span style="font-family:var(--mono);font-size:9px">▲▲▲</span></div>
+            <div class="ab"><div class="ab-logo">TASA<span>VE</span></div></div>
+            <div class="ptabs">
+              <div class="pt">7D</div><div class="pt on">30D</div><div class="pt">90D</div><div class="pt">1A</div>
+            </div>
+            <div class="chart-wrap">
+              <div class="chart-hdr">
+                <div>
+                  <div class="rate-lg">72.84 <span style="font-family:var(--mono);font-size:10px;color:var(--t3)">Bs/$</span></div>
+                  <div style="font-family:var(--mono);font-size:9px;color:var(--green);margin-top:3px">▲ +8.2% últimos 30 días</div>
+                </div>
+                <div class="legend">
+                  <div class="leg"><div class="leg-line"></div>BCV</div>
+                  <div class="leg"><div class="leg-dash"></div>P2P</div>
+                </div>
+              </div>
+              <svg class="chart" viewBox="0 0 320 85" preserveAspectRatio="none">
+                <path fill="rgba(0,230,118,.07)" d="M0,68 C40,62 75,56 105,50 S145,44 175,38 S215,30 255,22 S290,16 320,11 L320,85 L0,85Z"/>
+                <path fill="none" stroke="var(--green)" stroke-width="1.8" d="M0,68 C40,62 75,56 105,50 S145,44 175,38 S215,30 255,22 S290,16 320,11"/>
+                <path fill="none" stroke="var(--amber)" stroke-width="1.2" stroke-dasharray="4,3" d="M0,62 C40,57 75,52 105,47 S145,43 175,39 S215,34 255,29 S290,26 320,22"/>
+              </svg>
+            </div>
+            <div class="daily" style="margin-top:6px">
+              <div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border)">
+                <span style="font-family:var(--mono);font-size:8px;color:var(--t3);letter-spacing:2px">REGISTRO DIARIO</span>
+                <span style="font-family:var(--mono);font-size:8px;color:var(--green)">CSV →</span>
+              </div>
+              <div class="dr"><span class="dr-d">HOY</span><span class="dr-v">72.84</span><span class="dr-c up">+0.42%</span></div>
+              <div class="dr"><span class="dr-d">AYER</span><span class="dr-v">72.53</span><span class="dr-c up">+0.28%</span></div>
+              <div class="dr"><span class="dr-d">16 MAY</span><span class="dr-v">72.33</span><span class="dr-c dn">-0.11%</span></div>
+              <div class="dr"><span class="dr-d">15 MAY</span><span class="dr-v">72.41</span><span class="dr-c up">+0.95%</span></div>
+              <div class="dr"><span class="dr-d">14 MAY</span><span class="dr-v">71.73</span><span class="dr-c up">+1.22%</span></div>
+              <div class="dr"><span class="dr-d">13 MAY</span><span class="dr-v">70.87</span><span class="dr-c dn">-0.30%</span></div>
+            </div>
+            <div class="bnav">
+              <div class="bi"><div class="bi-bar"></div>INICIO</div>
+              <div class="bi"><div class="bi-bar"></div>CALCULAR</div>
+              <div class="bi on"><div class="bi-bar"></div>HIST</div>
+              <div class="bi"><div class="bi-bar"></div>REMESAS</div>
+              <div class="bi"><div class="bi-bar"></div>ALERTAS</div>
+            </div>
+          </div>
+        </div>
+        <div class="side">
+          <div class="sp">
+            <div class="sp-t">📈 El gap que cierra vs Al Cambio</div>
+            <div class="sp-b">Sin gráficas, <span class="r">TasaVe pierde</span> cualquier comparación directa con el competidor principal. Es el primer criterio de evaluación de usuarios técnicos.<br><br>La doble línea <span class="g">BCV sólida</span> + <span class="a">P2P punteada</span> visualiza el spread histórico — información que ninguna app local da en un solo gráfico.<br><br>El botón <span class="g">Exportar CSV</span> es un feature premium que los usuarios de negocios valoran mucho y convierte a usuarios indecisos.</div>
+          </div>
+          <div class="sp">
+            <div class="sp-t">🔧 Implementación</div>
+            <div class="sp-b">Los datos ya existen en el Worker de Cloudflare. Solo hay que exponer historial diario en KV Storage y renderizar con <strong>fl_chart</strong> en Flutter. Estimado: 2–3 días de trabajo.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- REMESAS -->
+  <div id="ap-remesas" class="sec">
+    <div class="wrap">
+      <div class="sec-lbl">Modo diáspora — El feature que nadie tiene</div>
+      <div class="row">
+        <div class="phone">
+          <div class="ph-body">
+            <div class="ph-status"><span>9:41</span><span style="font-family:var(--mono);font-size:9px">▲▲▲</span></div>
+            <div class="ab"><div class="ab-logo">TASA<span>VE</span></div></div>
+            <div class="card-sm">
+              <div class="lbl" style="margin-bottom:3px">MODO DIÁSPORA</div>
+              <div style="font-size:12px;color:var(--text);font-weight:500">Enviar desde el exterior</div>
+              <div style="font-size:10px;color:var(--t2);margin-top:2px">Compara cuánto llega según plataforma</div>
+            </div>
+            <div class="inp"><div><div class="lbl">USD</div></div><div class="rate-lg">200.00</div></div>
+            <div style="margin:6px 13px">
+              <div class="lbl" style="margin-bottom:5px">PLATAFORMA</div>
+              <div class="chips">
+                <div class="chip on">Zinli</div>
+                <div class="chip">Zelle</div>
+                <div class="chip">Binance</div>
+                <div class="chip">AirTM</div>
+                <div class="chip">PayPal</div>
+              </div>
+            </div>
+            <div class="bkdn">
+              <div class="br"><div class="br-l">Monto enviado</div><div class="br-v">$200.00</div></div>
+              <div class="br"><div class="br-l">Comisión Zinli (−2.5%)</div><div class="br-v neg">−$5.00</div></div>
+              <div class="br"><div class="br-l">Neto efectivo</div><div class="br-v">$195.00</div></div>
+              <div class="br"><div class="br-l">Tasa Zinli estimada</div><div class="br-v">74.80 Bs/$</div></div>
+              <div class="br"><div class="br-l" style="color:var(--text);font-weight:600">Llega en Venezuela</div><div class="br-v big">14,586 Bs</div></div>
+            </div>
+            <div style="margin:5px 13px;font-family:var(--mono);font-size:8px;color:var(--t3);letter-spacing:2px">COMPARATIVA · $200</div>
+            <div class="cmpt">
+              <div class="cmpr best"><div class="cmp-p" style="color:var(--green)">Zinli ★</div><div class="cmp-v" style="color:var(--green)">14,586 Bs</div></div>
+              <div class="cmpr"><div class="cmp-p">Binance P2P</div><div class="cmp-v">15,044 Bs</div></div>
+              <div class="cmpr"><div class="cmp-p">AirTM</div><div class="cmp-v dim">14,210 Bs</div></div>
+              <div class="cmpr"><div class="cmp-p">PayPal → P2P</div><div class="cmp-v" style="color:var(--t3)">13,980 Bs</div></div>
+            </div>
+            <div class="bnav">
+              <div class="bi"><div class="bi-bar"></div>INICIO</div>
+              <div class="bi"><div class="bi-bar"></div>CALCULAR</div>
+              <div class="bi"><div class="bi-bar"></div>HIST</div>
+              <div class="bi on"><div class="bi-bar"></div>REMESAS</div>
+              <div class="bi"><div class="bi-bar"></div>ALERTAS</div>
+            </div>
+          </div>
+        </div>
+        <div class="side">
+          <div class="sp" style="background:var(--gdim);border-color:var(--green)">
+            <div class="sp-t" style="color:var(--green)">💎 Mina de oro sin explotar</div>
+            <div class="sp-b"><strong>8 millones de venezolanos en el exterior.</strong> Muchos enviando remesas regularmente. Sin una herramienta decente para calcular con tarifas reales y en tiempo real. Ese segmento tiene dólares y paga premium. Ninguna app del nicho lo tiene resuelto.</div>
+          </div>
+          <div class="sp">
+            <div class="sp-t">✈️ Por qué este feature retiene usuarios</div>
+            <div class="sp-b">La persona en Perú o España no sabe si Zinli o Binance le conviene <em>esa semana</em>. TasaVe lo responde en 2 segundos con datos reales. Es una calculadora que <span class="g">ahorra dinero real</span> — el tipo de valor por el que la gente paga premium y recomienda.</div>
+          </div>
+          <div class="sp">
+            <div class="sp-t">🌎 Expansión geográfica v2</div>
+            <div class="sp-b">Colombia · Perú · España · Chile · EEUU. Cada uno con patrones de envío distintos. TasaVe puede segmentar la pantalla de remesas por país de origen en la siguiente versión.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ALERTAS -->
+  <div id="ap-alertas" class="sec">
+    <div class="wrap">
+      <div class="sec-lbl">Alertas inteligentes — Flagship premium</div>
+      <div class="row">
+        <div class="phone">
+          <div class="ph-body">
+            <div class="ph-status"><span>9:41</span><span style="font-family:var(--mono);font-size:9px">▲▲▲</span></div>
+            <div class="ab"><div class="ab-logo">TASA<span>VE</span></div><div class="prem" style="font-size:8px">PREMIUM ACTIVO</div></div>
+            <div style="margin:4px 13px 7px;font-family:var(--mono);font-size:8px;color:var(--t3);letter-spacing:2px">ALERTAS RECIENTES</div>
+            <div class="af">
+              <div class="ac urg"><div class="a-tm">hace 2m</div><div class="a-ico">⚡</div><div class="a-t">Ritmo inusual detectado</div><div class="a-d">BCV subió 0.8% en 1 hora · velocidad 3× el promedio del lunes</div></div>
+              <div class="ac bld"><div class="a-tm">09:22</div><div class="a-ico">📊</div><div class="a-t">Spread BCV/Paralelo en máximo</div><div class="a-d">Diferencia llegó a 3.1% · mayor en 14 días</div></div>
+              <div class="ac suc"><div class="a-tm">08:15</div><div class="a-ico">✓</div><div class="a-t">Cambio BCV publicado</div><div class="a-d">Nueva tasa oficial: 72.84 Bs/$ · antes 72.53</div></div>
+              <div class="ac inf" style="opacity:.5"><div class="a-tm">ayer</div><div class="a-ico">🎯</div><div class="a-t">Alerta de precio configurada</div><div class="a-d">Yadio bajó de 75.50 a 75.08 · umbral: 75.00</div></div>
+            </div>
+            <div style="margin:10px 13px 4px;font-family:var(--mono);font-size:8px;color:var(--t3);letter-spacing:2px">MIS ALERTAS ACTIVAS</div>
+            <div class="tgl">
+              <div class="tr"><div><div class="tl">BCV supere <span style="color:var(--green);font-family:var(--mono)">75.00</span></div><div class="ts">Push inmediato</div></div><div class="sw on"><div class="th"></div></div></div>
+              <div class="tr"><div><div class="tl">Ritmo inusual <span style="color:var(--amber);font-family:var(--mono)">cualquier fuente</span></div><div class="ts">Velocidad anormal</div></div><div class="sw on-a"><div class="th"></div></div></div>
+              <div class="tr"><div><div class="tl">Spread supere <span style="color:var(--t2);font-family:var(--mono)">4%</span></div><div class="ts">Diferencia oficial vs paralelo</div></div><div class="sw"><div class="th"></div></div></div>
+            </div>
+            <div class="bnav">
+              <div class="bi"><div class="bi-bar"></div>INICIO</div>
+              <div class="bi"><div class="bi-bar"></div>CALCULAR</div>
+              <div class="bi"><div class="bi-bar"></div>HIST</div>
+              <div class="bi"><div class="bi-bar"></div>REMESAS</div>
+              <div class="bi on"><div class="bi-bar"></div>ALERTAS</div>
+            </div>
+          </div>
+        </div>
+        <div class="side">
+          <div class="sp">
+            <div class="sp-t">⚡ Por qué las alertas son el motor premium</div>
+            <div class="sp-b">La alerta de <span class="a">"ritmo inusual"</span> convierte TasaVe de app pasiva a monitor activo. No es "cambió a 45.20" — es "subió 3.4% en 6 horas, ritmo atípico para un martes".<br><br>Las alertas de <span class="g">spread BCV/P2P</span> son el feature más sofisticado del mercado — cuando ambas fuentes divergen más de X%, el usuario sabe que algo está pasando antes que nadie.<br><br>El Worker en Cloudflare <span class="g">ya tiene la infraestructura</span>. Solo falta agregar lógica de velocidad de cambio y push notifications.</div>
+          </div>
+          <div class="sp">
+            <div class="sp-t">💡 Sin anuncios en pantalla premium</div>
+            <div class="sp-b">La pantalla de Alertas no tiene ningún ad slot — es exclusiva de premium. Intencional: <span class="g">la ausencia de ads ES el beneficio premium</span> más visible y valorado por el usuario.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- WIDGETS -->
+  <div id="ap-widgets" class="sec">
+    <div class="wrap">
+      <div class="sec-lbl">Widgets — El diferenciador #1</div>
+      <div style="display:grid;grid-template-columns:1fr 2fr;gap:24px;max-width:860px;margin:0 auto 40px">
+        <div>
+          <div class="lbl" style="text-align:center;margin-bottom:10px">2×2 COMPACTO</div>
+          <div class="wf">
+            <div class="wc">
+              <div class="wb"><div class="wl"></div>TASAVE</div>
+              <div class="wm">72.84</div>
+              <div class="wch">▲ +0.42% hoy</div>
+              <div class="wmeta"><span>hace 2 min</span><span>Bs/$</span></div>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div class="lbl" style="text-align:center;margin-bottom:10px">4×2 ESTÁNDAR</div>
+          <div class="wf">
+            <div class="wc">
+              <div class="wb"><div class="wl"></div>TASAVE — TIEMPO REAL</div>
+              <div class="wg3">
+                <div><div class="wi-l">BCV OFICIAL</div><div class="wi-v">72.84</div><div class="wi-c up">+0.42%</div></div>
+                <div><div class="wi-l">USDT P2P</div><div class="wi-v">75.10</div><div class="wi-c amb">+3.1%</div></div>
+                <div><div class="wi-l">YADIO</div><div class="wi-v">75.08</div><div class="wi-c dn">-0.12%</div></div>
+              </div>
+              <div style="font-family:var(--mono);font-size:7px;color:var(--t3);margin-top:9px;display:flex;justify-content:space-between"><span>● hace 2 min</span><span>Bs por $1</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div style="background:var(--gdim);border:1px solid var(--green);border-radius:var(--r3);padding:26px;max-width:860px;margin:0 auto">
+        <div class="lbl" style="color:var(--green);margin-bottom:16px">POR QUÉ EL WIDGET GANA LA BATALLA</div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px">
+          <div><div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:5px">Sin abrir la app</div><div style="font-size:11px;color:var(--t2);line-height:1.6">La tasa vive en la pantalla de inicio. Desinstalar la competencia se vuelve un reflejo natural.</div></div>
+          <div><div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:5px">Nadie lo tiene bien</div><div style="font-size:11px;color:var(--t2);line-height:1.6">Ningún competidor venezolano tiene widget bien implementado en Android con actualización en tiempo real.</div></div>
+          <div><div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:5px">Marketing natural</div><div style="font-size:11px;color:var(--t2);line-height:1.6">"La única app con widget en tiempo real" — mensaje que se vende solo en screenshots de redes sociales.</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════ ANUNCIOS ══════════════════════════ -->
+<div id="s-ads" class="sec">
+  <div class="wrap">
+    <div class="sec-lbl">Estrategia de monetización — AdMob</div>
+
+    <div class="ads-intro">
+      <div style="display:flex;gap:14px;align-items:flex-start">
+        <div style="font-size:26px">💰</div>
+        <div>
+          <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:7px">Arquitectura freemium con puerta abierta para AdMob</div>
+          <div style="font-size:12px;color:var(--t2);line-height:1.8;max-width:660px">Todos los ad slots están marcados en el mockup con borde punteado. Los usuarios <span style="color:var(--green);font-weight:600">premium no ven ningún anuncio</span> — ese es el valor central de la suscripción. Los usuarios gratuitos ven banners contextuales en los slots definidos a continuación.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sec-lbl">Tipos de anuncio y ubicaciones</div>
+    <div class="ad-cards">
+      <div class="adc">
+        <div class="adc-hdr"><div class="adc-n">Banner 320×50</div><div class="adc-r" style="color:var(--green)">CPM: $0.8–2.0</div></div>
+        <div class="adc-d">Ubicación: parte superior del Home, debajo del app bar. Alta visibilidad sin bloquear contenido core. El formato más simple de implementar en Flutter.</div>
+        <div class="ad" style="height:44px"><div class="ad-tag">SLOT 1</div><div class="ad-lbl">BANNER 320×50</div><div class="ad-sz">Home · encima de referencias secundarias</div></div>
+      </div>
+      <div class="adc">
+        <div class="adc-hdr"><div class="adc-n">Native Ad Small</div><div class="adc-r" style="color:var(--amber)">CPM: $1.5–4.0</div></div>
+        <div class="adc-d">Ubicación: entre resultados y teclado en Calculadora. Momento de mayor atención post-cálculo. Se mezcla con el contenido sin romper el flujo.</div>
+        <div class="ad" style="height:44px"><div class="ad-tag">SLOT 2</div><div class="ad-lbl">NATIVE SMALL</div><div class="ad-sz">Calculadora · entre resultados y teclado</div></div>
+      </div>
+      <div class="adc">
+        <div class="adc-hdr"><div class="adc-n">Interstitial</div><div class="adc-r" style="color:var(--blue)">CPM: $3.0–8.0</div></div>
+        <div class="adc-d">Trigger: al cambiar de pantalla (máx 1 cada 3 navegaciones). El formato de mayor CPM. Limitado para no degradar la UX del usuario gratuito.</div>
+        <div style="height:44px;margin-top:8px;display:flex;align-items:center;justify-content:center;gap:7px;font-family:var(--mono);font-size:9px;color:var(--blue);background:var(--bdim);border:1px dashed var(--blue);border-radius:var(--r1)">⚡ Al cambiar de sección · máx 1 cada 3 taps</div>
+      </div>
+      <div class="adc">
+        <div class="adc-hdr"><div class="adc-n">Rewarded Video</div><div class="adc-r" style="color:var(--purple)">CPM: $5.0–15.0</div></div>
+        <div class="adc-d">Trigger: "Mirá un video para exportar este historial en CSV sin premium". Mayor CPM de todos. Convierte usuarios indecisos en suscriptores premium.</div>
+        <div style="height:44px;margin-top:8px;display:flex;align-items:center;justify-content:center;gap:7px;font-family:var(--mono);font-size:9px;color:var(--purple);background:var(--pdim);border:1px dashed var(--purple);border-radius:var(--r1)">▶ Ver video → Exportar CSV · o desbloquear alerta</div>
+      </div>
+    </div>
+
+    <div class="sec-lbl">Reglas de implementación</div>
+    <div class="sp" style="margin-bottom:20px">
+      <div class="sp-t">📋 Implementación en Flutter</div>
+      <div class="sp-b">
+        <strong>Slot 1 (Banner top):</strong> Siempre activo para usuarios free. Se inicializa en el <code style="background:var(--s3);padding:1px 5px;border-radius:4px;font-size:10px">initState()</code> del widget Home antes de que carguen las tasas.<br><br>
+        <strong>Slot 2 (Native en calculadora):</strong> Solo se carga cuando el usuario navega a esa tab — lazy loading para no impactar el tiempo de arranque.<br><br>
+        <strong>Interstitial:</strong> Pre-cargar en background al abrir la app. Mostrar solo en cambios de sección, nunca en el primer tap ni en sesiones de menos de 60 segundos.<br><br>
+        <strong>Rewarded:</strong> El botón "Ver video" aparece solo cuando el usuario intenta acceder a un feature premium (Exportar CSV, agregar más alertas).<br><br>
+        <span class="g">Premium users:</span> Verificar estado en el Provider y no inicializar el SDK de AdMob si está activo — el SDK consume memoria incluso con ads ocultos.
+      </div>
+    </div>
+
+    <div class="sec-lbl">Estimado de revenue mensual</div>
+    <div class="rev-grid" style="max-width:500px">
+      <div class="rv">
+        <div class="rv-lbl">1,000 DAU free</div>
+        <div class="rv-v" style="color:var(--green)">$45–90</div>
+        <div class="rv-sub">/ mes · banner + native</div>
+      </div>
+      <div class="rv">
+        <div class="rv-lbl">5,000 DAU free</div>
+        <div class="rv-v" style="color:var(--amber)">$225–450</div>
+        <div class="rv-sub">/ mes · todos los formatos</div>
+      </div>
+      <div class="rv">
+        <div class="rv-lbl">10,000 DAU free</div>
+        <div class="rv-v" style="color:var(--blue)">$450–900</div>
+        <div class="rv-sub">/ mes · todos los formatos</div>
+      </div>
+      <div class="rv">
+        <div class="rv-lbl">Rewarded bonus</div>
+        <div class="rv-v" style="color:var(--purple)">+40%</div>
+        <div class="rv-sub">si activo en Historial</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function main(id, btn) {
+  document.querySelectorAll('.sec[id^="s-"]').forEach(s => s.classList.remove('on'));
+  document.querySelectorAll('.hn').forEach(b => b.classList.remove('on'));
+  document.getElementById('s-'+id).classList.add('on');
+  btn.classList.add('on');
+  window.scrollTo({top:0,behavior:'smooth'});
+  if(id==='app'){
+    document.querySelector('.subnav').style.display='flex';
+  } else {
+    document.querySelector('.subnav').style.display='none';
+  }
+}
+
+function sub(id, btn) {
+  document.querySelectorAll('#s-app .sec[id^="ap-"]').forEach(s => s.classList.remove('on'));
+  document.querySelectorAll('#appnav .sn').forEach(b => b.classList.remove('on'));
+  document.getElementById('ap-'+id).classList.add('on');
+  btn.classList.add('on');
+  window.scrollTo({top:110,behavior:'smooth'});
+}
+
+document.querySelector('.subnav').style.display='none';
+</script>
+</body>
+</html>
