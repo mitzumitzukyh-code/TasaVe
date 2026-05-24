@@ -60,7 +60,7 @@ export default {
 // ── Handlers ───────────────────────────────────────────────
 
 async function handleCurrentRate(env) {
-  const cached = await env.TASAVE_KV.get(KV_KEYS.CURRENT_RATE, 'json');
+  const cached = await env.CALCULAYA_KV.get(KV_KEYS.CURRENT_RATE, 'json');
 
   if (cached) {
     const age = (Date.now() - new Date(cached.timestamp).getTime()) / 1000;
@@ -103,7 +103,7 @@ function getNextUpdateInfo() {
 }
 
 async function handleHistory(env, days) {
-  const allHistory = await env.TASAVE_KV.get(KV_KEYS.HISTORY, 'json') || [];
+  const allHistory = await env.CALCULAYA_KV.get(KV_KEYS.HISTORY, 'json') || [];
 
   const cutoff = new Date();
   cutoff.setDate(cutoff.getDate() - days);
@@ -157,7 +157,7 @@ async function fetchAndStoreRate(env) {
       timestamp: new Date().toISOString(),
     };
 
-    await env.TASAVE_KV.put(KV_KEYS.CURRENT_RATE, JSON.stringify(rateData));
+    await env.CALCULAYA_KV.put(KV_KEYS.CURRENT_RATE, JSON.stringify(rateData));
 
     await appendToHistory(env, rateData);
 
@@ -375,17 +375,17 @@ async function handleAlertRegister(request, env) {
       updatedAt: new Date().toISOString(),
     };
 
-    await env.TASAVE_KV.put(
+    await env.CALCULAYA_KV.put(
       `alert_device_${tokenHash}`,
       JSON.stringify(deviceData),
       { expirationTtl: 60 * 60 * 24 * 90 } // 90 days TTL
     );
 
     // Add token hash to the device index for cron iteration
-    const deviceIndex = await env.TASAVE_KV.get('alert_device_index', 'json') || [];
+    const deviceIndex = await env.CALCULAYA_KV.get('alert_device_index', 'json') || [];
     if (!deviceIndex.includes(tokenHash)) {
       deviceIndex.push(tokenHash);
-      await env.TASAVE_KV.put('alert_device_index', JSON.stringify(deviceIndex));
+      await env.CALCULAYA_KV.put('alert_device_index', JSON.stringify(deviceIndex));
     }
 
     return jsonResponse({ status: 'registered', deviceHash: tokenHash });
@@ -396,10 +396,10 @@ async function handleAlertRegister(request, env) {
 
 async function checkAndSendAlerts(env) {
   try {
-    const currentRate = await env.TASAVE_KV.get(KV_KEYS.CURRENT_RATE, 'json');
+    const currentRate = await env.CALCULAYA_KV.get(KV_KEYS.CURRENT_RATE, 'json');
     if (!currentRate) return;
 
-    const deviceIndex = await env.TASAVE_KV.get('alert_device_index', 'json') || [];
+    const deviceIndex = await env.CALCULAYA_KV.get('alert_device_index', 'json') || [];
     if (deviceIndex.length === 0) return;
 
     const fcmKey = env.FCM_SERVER_KEY;
@@ -415,7 +415,7 @@ async function checkAndSendAlerts(env) {
       : 0;
 
     for (const tokenHash of deviceIndex) {
-      const deviceData = await env.TASAVE_KV.get(`alert_device_${tokenHash}`, 'json');
+      const deviceData = await env.CALCULAYA_KV.get(`alert_device_${tokenHash}`, 'json');
       if (!deviceData) continue;
 
       const { token, alerts } = deviceData;
@@ -437,7 +437,7 @@ async function checkAndSendAlerts(env) {
             break;
           case 'ritmo_inusual':
             // Compare with previous rate for rapid change detection
-            const history = await env.TASAVE_KV.get(KV_KEYS.HISTORY, 'json') || [];
+            const history = await env.CALCULAYA_KV.get(KV_KEYS.HISTORY, 'json') || [];
             if (history.length >= 2) {
               const prev = history[1]?.bcvUsd || history[0]?.bcvUsd;
               const changePercent = prev > 0 ? Math.abs((bcvUsd - prev) / prev * 100) : 0;
@@ -452,7 +452,7 @@ async function checkAndSendAlerts(env) {
       // Send push notification if any alert triggered
       if (messages.length > 0) {
         await sendFcmNotification(fcmKey, token, {
-          title: 'TasaVe - Alerta',
+          title: 'CalculaYa - Alerta',
           body: messages.join(' · '),
           data: { bcvUsd: String(bcvUsd), spread: String(spreadPercent.toFixed(1)) },
         });
@@ -497,7 +497,7 @@ async function hashToken(token) {
 // ── History ──────────────────────────────────────────────
 
 async function appendToHistory(env, rateData) {
-  const history = await env.TASAVE_KV.get(KV_KEYS.HISTORY, 'json') || [];
+  const history = await env.CALCULAYA_KV.get(KV_KEYS.HISTORY, 'json') || [];
   const today = new Date().toISOString().split('T')[0];
 
   // Calcular variación respecto al día anterior
@@ -521,7 +521,7 @@ async function appendToHistory(env, rateData) {
 
   // Mantener máximo 90 días
   const trimmed = history.slice(0, 90);
-  await env.TASAVE_KV.put(KV_KEYS.HISTORY, JSON.stringify(trimmed));
+  await env.CALCULAYA_KV.put(KV_KEYS.HISTORY, JSON.stringify(trimmed));
 }
 
 // ── Utils ──────────────────────────────────────────────────

@@ -25,13 +25,13 @@ void main() async {
       overrides: [
         sharedPreferencesProvider.overrideWithValue(prefs),
       ],
-      child: const TasaVeApp(),
+      child: const CalculaYaApp(),
     ),
   );
 }
 
-class TasaVeApp extends ConsumerWidget {
-  const TasaVeApp({super.key});
+class CalculaYaApp extends ConsumerWidget {
+  const CalculaYaApp({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -42,7 +42,7 @@ class TasaVeApp extends ConsumerWidget {
     _initNotifications(ref);
 
     return MaterialApp(
-      title: 'TasaVe',
+      title: 'CalculaYa',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.dark,
       darkTheme: AppTheme.dark,

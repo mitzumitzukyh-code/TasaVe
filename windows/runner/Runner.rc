@@ -89,13 +89,13 @@ BEGIN
     BEGIN
         BLOCK "040904e4"
         BEGIN
-            VALUE "CompanyName", "com.tasave" "\0"
-            VALUE "FileDescription", "tasave" "\0"
+            VALUE "CompanyName", "com.calculaya" "\0"
+            VALUE "FileDescription", "calculaya" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
-            VALUE "InternalName", "tasave" "\0"
-            VALUE "LegalCopyright", "Copyright (C) 2026 com.tasave. All rights reserved." "\0"
-            VALUE "OriginalFilename", "tasave.exe" "\0"
-            VALUE "ProductName", "tasave" "\0"
+            VALUE "InternalName", "calculaya" "\0"
+            VALUE "LegalCopyright", "Copyright (C) 2026 com.calculaya. All rights reserved." "\0"
+            VALUE "OriginalFilename", "calculaya.exe" "\0"
+            VALUE "ProductName", "calculaya" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END

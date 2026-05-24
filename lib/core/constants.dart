@@ -72,7 +72,7 @@ class AppColors {
 class AppStrings {
   AppStrings._();
 
-  static const String APP_NAME = 'TasaVe';
+  static const String APP_NAME = 'CalculaYa';
   static const String ERROR_NO_CONNECTION = 'Sin conexión. Mostrando último dato guardado.';
   static const String ERROR_API = 'No se pudo actualizar. Intenta más tarde.';
   static const String UPDATED_AGO = 'Actualizado hace';
@@ -94,7 +94,7 @@ class AppStrings {
 class ApiConfig {
   ApiConfig._();
 
-  static const String API_BASE_URL = 'https://tasave-api.miztmutzuki.workers.dev';
+  static const String API_BASE_URL = 'https://calculaya-api.miztmutzuki.workers.dev';
   static const String BCV_ENDPOINT = '$API_BASE_URL/tasa';
   static const int REFRESH_INTERVAL_MINUTES = 30;
 }

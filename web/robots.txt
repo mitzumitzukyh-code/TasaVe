@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://tasave-app.pages.dev/sitemap.xml
+Sitemap: https://calculaya-app.pages.dev/sitemap.xml

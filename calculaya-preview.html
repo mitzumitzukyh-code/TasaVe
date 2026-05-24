@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>TasaVe — Preview UI</title>
+<title>CalculaYa — Preview UI</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
@@ -451,11 +451,11 @@ canvas#histChart{width:100%!important;height:200px!important}
 // ══════════════════════════════════════════════════════════
 // CONFIG
 // ══════════════════════════════════════════════════════════
-const API = 'https://tasave-api.miztmutzuki.workers.dev';
-const CACHE_KEY = 'tasave_rate_v3';
-const HIST_KEY  = 'tasave_hist_v3';
-const PREFS_KEY = 'tasave_prefs_v1';
-const PROFILES_KEY = 'tasave_profiles_v1';
+const API = 'https://calculaya-api.miztmutzuki.workers.dev';
+const CACHE_KEY = 'calculaya_rate_v3';
+const HIST_KEY  = 'calculaya_hist_v3';
+const PREFS_KEY = 'calculaya_prefs_v1';
+const PROFILES_KEY = 'calculaya_profiles_v1';
 
 // ══════════════════════════════════════════════════════════
 // STATE
@@ -889,7 +889,7 @@ function buildShareText(p, amount){
   if(p.zelle) lines.push(`💵 Zelle: ${p.zelle}`);
   if(amount>0&&bcv>0){ lines.push(''); lines.push(`💱 $${fmtRate(amount)} × ${fmtRate(bcv)} = *${fmtRate(amount*bcv)} Bs*`); }
   if(p.notes) lines.push(`📝 ${p.notes}`);
-  lines.push(''); lines.push('_Enviado desde TasaVe • tasave-app.pages.dev_');
+  lines.push(''); lines.push('_Enviado desde CalculaYa • calculaya-app.pages.dev_');
   return lines.join('\n');
 }
 
@@ -919,8 +919,8 @@ function shareWhatsApp(){
 // ══════════════════════════════════════════════════════════
 // ALERTAS
 // ══════════════════════════════════════════════════════════
-function loadAlerts(){ const saved=ls('tasave_alerts_v1'); if(saved) Object.assign(state.alerts,saved); }
-function saveAlerts(){ lsSet('tasave_alerts_v1',state.alerts); }
+function loadAlerts(){ const saved=ls('calculaya_alerts_v1'); if(saved) Object.assign(state.alerts,saved); }
+function saveAlerts(){ lsSet('calculaya_alerts_v1',state.alerts); }
 
 function renderAlerts(){
   loadAlerts();

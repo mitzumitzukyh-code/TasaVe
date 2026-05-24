@@ -7,11 +7,11 @@
 
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:tasave/main.dart';
+import 'package:calculaya/main.dart';
 
 void main() {
   testWidgets('App builds without errors', (WidgetTester tester) async {
-    await tester.pumpWidget(const TasaVeApp());
-    expect(find.text('TasaVe'), findsNothing);
+    await tester.pumpWidget(const CalculaYaApp());
+    expect(find.text('CalculaYa'), findsNothing);
   });
 }

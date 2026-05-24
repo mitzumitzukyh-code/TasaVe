@@ -83,7 +83,7 @@ class PaymentProfile {
     }
     if (notes.isNotEmpty) lines.add('📝 $notes');
     lines.add('');
-    lines.add('_Enviado desde TasaVe • tasave-app.pages.dev_');
+    lines.add('_Enviado desde CalculaYa • calculaya-app.pages.dev_');
     return lines.join('\n');
   }
 }

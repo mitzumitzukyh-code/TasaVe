@@ -214,7 +214,7 @@ class HomeScreen extends ConsumerWidget {
               // App version
               _SettingsTile(
                 label: 'Versión',
-                subtitle: 'TasaVe v1.0.0',
+                subtitle: 'CalculaYa v1.0.0',
                 trailing: const SizedBox.shrink(),
               ),
             ],

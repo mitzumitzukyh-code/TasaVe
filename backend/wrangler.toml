@@ -1,4 +1,4 @@
-name = "tasave-api"
+name = "calculaya-api"
 main = "src/index.js"
 compatibility_date = "2024-01-01"
 
@@ -8,7 +8,7 @@ ENVIRONMENT = "production"
 # npx wrangler secret put FCM_SERVER_KEY
 
 [[kv_namespaces]]
-binding = "TASAVE_KV"
+binding = "CALCULAYA_KV"
 id = "1950d4cfc2e74d049adf6265f4b9acbb"
 
 # Cron: cada 15 min durante ventana BCV (4-6 PM VET = 20-22 UTC)
