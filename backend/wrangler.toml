@@ -4,8 +4,11 @@ compatibility_date = "2024-01-01"
 
 [vars]
 ENVIRONMENT = "production"
-# FCM_SERVER_KEY se configura como secret:
-# npx wrangler secret put FCM_SERVER_KEY
+VAPID_SUBJECT = "https://tasave-app.pages.dev"
+# VAPID keys se configuran como secrets:
+# npx wrangler secret put VAPID_PUBLIC_KEY
+# npx wrangler secret put VAPID_PRIVATE_KEY
+# Genera las claves con: npx web-push generate-vapid-keys
 
 [[kv_namespaces]]
 binding = "TASAVE_KV"
@@ -14,4 +17,4 @@ id = "1950d4cfc2e74d049adf6265f4b9acbb"
 # Cron: cada 15 min durante ventana BCV (4-6 PM VET = 20-22 UTC)
 # + una vez a las 8 AM VET (12 UTC) para verificar que tenemos dato del dia anterior
 [triggers]
-crons = ["*/15 20-21 * * 1-5", "0 12 * * 1-5"]
+crons = ["*/15 20-22 * * 1-5", "0 12 * * 1-5", "0 23 * * 1-5"]

@@ -36,19 +36,4 @@ class BcvService {
       throw Exception(AppStrings.ERROR_API);
     }
   }
-
-  /// Sync alert preferences + FCM token to backend
-  Future<void> syncAlertPreferences({
-    required String token,
-    required List alerts,
-  }) async {
-    try {
-      await _dio.post('/alerts/register', data: {
-        'token': token,
-        'alerts': alerts.map((a) => a.toJson()).toList(),
-      });
-    } on DioException {
-      // silently fail
-    }
-  }
 }

@@ -1,6 +1,8 @@
+import { sendWebPush } from './web-push.js';
+
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'GET, OPTIONS',
+  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
   'Access-Control-Allow-Headers': 'Content-Type',
   'Content-Type': 'application/json; charset=utf-8',
 };
@@ -45,6 +47,19 @@ export default {
         return await handleAlertRegister(request, env);
       }
 
+      // ── Web Push endpoints ──
+      if (path === '/push/vapid-key') {
+        return jsonResponse({ publicKey: env.VAPID_PUBLIC_KEY });
+      }
+
+      if (path === '/push/subscribe' && request.method === 'POST') {
+        return await handlePushSubscribe(request, env);
+      }
+
+      if (path === '/push/unsubscribe' && request.method === 'POST') {
+        return await handlePushUnsubscribe(request, env);
+      }
+
       return jsonResponse({ error: 'Ruta no encontrada' }, 404);
     } catch (err) {
       return jsonResponse({ error: 'Error interno del servidor' }, 500);
@@ -54,6 +69,7 @@ export default {
   async scheduled(event, env) {
     await fetchAndStoreRate(env);
     await checkAndSendAlerts(env);
+    await sendSmartNotifications(env);
   },
 };
 
@@ -381,12 +397,7 @@ async function handleAlertRegister(request, env) {
       { expirationTtl: 60 * 60 * 24 * 90 } // 90 days TTL
     );
 
-    // Add token hash to the device index for cron iteration
-    const deviceIndex = await env.TASAVE_KV.get('alert_device_index', 'json') || [];
-    if (!deviceIndex.includes(tokenHash)) {
-      deviceIndex.push(tokenHash);
-      await env.TASAVE_KV.put('alert_device_index', JSON.stringify(deviceIndex));
-    }
+    // Sin índice central: se itera usando TASAVE_KV.list({ prefix: 'alert_device_' }) en el cron
 
     return jsonResponse({ status: 'registered', deviceHash: tokenHash });
   } catch (err) {
@@ -399,63 +410,73 @@ async function checkAndSendAlerts(env) {
     const currentRate = await env.TASAVE_KV.get(KV_KEYS.CURRENT_RATE, 'json');
     if (!currentRate) return;
 
-    const deviceIndex = await env.TASAVE_KV.get('alert_device_index', 'json') || [];
-    if (deviceIndex.length === 0) return;
-
-    const fcmKey = env.FCM_SERVER_KEY;
-    if (!fcmKey) {
-      console.error('FCM_SERVER_KEY not configured');
-      return;
-    }
-
     const bcvUsd = currentRate.bcvUsd;
     const usdtP2P = currentRate.usdtP2P;
     const spreadPercent = usdtP2P && bcvUsd > 0
       ? ((usdtP2P - bcvUsd) / bcvUsd * 100)
       : 0;
 
-    for (const tokenHash of deviceIndex) {
-      const deviceData = await env.TASAVE_KV.get(`alert_device_${tokenHash}`, 'json');
-      if (!deviceData) continue;
+    // Iterar sobre todos los dispositivos usando prefijo (sin índice central)
+    let cursor = undefined;
+    let hasMore = true;
 
-      const { token, alerts } = deviceData;
-      const messages = [];
+    while (hasMore) {
+      const listed = await env.TASAVE_KV.list({ prefix: 'alert_device_', cursor, limit: 100 });
+      hasMore = !listed.list_complete;
+      cursor = listed.cursor;
 
-      for (const alert of alerts) {
-        if (!alert.enabled) continue;
+      for (const key of listed.keys) {
+        const deviceData = await env.TASAVE_KV.get(key.name, 'json');
+        if (!deviceData) continue;
 
-        switch (alert.type) {
-          case 'bcv_above':
-            if (alert.threshold > 0 && bcvUsd >= alert.threshold) {
-              messages.push(`BCV alcanzó ${bcvUsd.toFixed(2)} Bs/$ (umbral: ${alert.threshold.toFixed(2)})`);
-            }
-            break;
-          case 'spread_above':
-            if (Math.abs(spreadPercent) >= alert.threshold) {
-              messages.push(`Spread en ${spreadPercent.toFixed(1)}% (umbral: ${alert.threshold.toFixed(1)}%)`);
-            }
-            break;
-          case 'ritmo_inusual':
-            // Compare with previous rate for rapid change detection
-            const history = await env.TASAVE_KV.get(KV_KEYS.HISTORY, 'json') || [];
-            if (history.length >= 2) {
-              const prev = history[1]?.bcvUsd || history[0]?.bcvUsd;
-              const changePercent = prev > 0 ? Math.abs((bcvUsd - prev) / prev * 100) : 0;
-              if (changePercent >= alert.threshold) {
-                messages.push(`Cambio rápido: ${changePercent.toFixed(1)}% en el último periodo`);
+        const { token, alerts } = deviceData;
+        const messages = [];
+
+        for (const alert of alerts) {
+          if (!alert.enabled) continue;
+
+          switch (alert.type) {
+            case 'bcv_above':
+              if (alert.threshold > 0 && bcvUsd >= alert.threshold) {
+                messages.push(`BCV alcanzó ${bcvUsd.toFixed(2)} Bs/$ (umbral: ${alert.threshold.toFixed(2)})`);
               }
+              break;
+            // p2p_above y spread_above son equivalentes: comparan la brecha % P2P vs BCV
+            case 'p2p_above':
+            case 'spread_above':
+              if (Math.abs(spreadPercent) >= alert.threshold) {
+                messages.push(`Diferencia P2P en ${spreadPercent.toFixed(1)}% (umbral: ${alert.threshold.toFixed(1)}%)`);
+              }
+              break;
+            case 'ritmo_inusual': {
+              // Comparar con la tasa del día anterior para detectar cambios rápidos
+              const history = await env.TASAVE_KV.get(KV_KEYS.HISTORY, 'json') || [];
+              if (history.length >= 2) {
+                const prev = history[1]?.bcvUsd || history[0]?.bcvUsd;
+                const changePercent = prev > 0 ? Math.abs((bcvUsd - prev) / prev * 100) : 0;
+                if (changePercent >= alert.threshold) {
+                  messages.push(`Cambio rápido: ${changePercent.toFixed(1)}% en el último periodo`);
+                }
+              }
+              break;
             }
-            break;
+          }
         }
-      }
 
-      // Send push notification if any alert triggered
-      if (messages.length > 0) {
-        await sendFcmNotification(fcmKey, token, {
-          title: 'TasaVe - Alerta',
-          body: messages.join(' · '),
-          data: { bcvUsd: String(bcvUsd), spread: String(spreadPercent.toFixed(1)) },
-        });
+        // Enviar notificación push si alguna alerta fue disparada
+        if (messages.length > 0) {
+          // Intentar Web Push (suscripción web) primero, FCM legacy como fallback
+          if (deviceData.subscription) {
+            const result = await sendWebPush(env, deviceData.subscription, {
+              title: 'TasaVe - Alerta',
+              body: messages.join(' · '),
+              data: { bcvUsd: String(bcvUsd), spread: String(spreadPercent.toFixed(1)) },
+            });
+            if (result.expired) {
+              await env.TASAVE_KV.delete(key.name);
+            }
+          }
+        }
       }
     }
   } catch (err) {
@@ -463,26 +484,215 @@ async function checkAndSendAlerts(env) {
   }
 }
 
-async function sendFcmNotification(serverKey, token, notification) {
+// ── Web Push subscription handlers ───────────────────────────────────────────
+
+async function handlePushSubscribe(request, env) {
   try {
-    await fetch('https://fcm.googleapis.com/fcm/send', {
-      method: 'POST',
-      headers: {
-        'Authorization': `key=${serverKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        to: token,
-        notification: {
-          title: notification.title,
-          body: notification.body,
-          icon: '/icons/Icon-192.png',
-        },
-        data: notification.data || {},
-      }),
-    });
+    const body = await request.json();
+    const { subscription, alerts } = body;
+
+    if (!subscription || !subscription.endpoint || !subscription.keys) {
+      return jsonResponse({ error: 'subscription es requerido con endpoint y keys' }, 400);
+    }
+
+    const subHash = await hashToken(subscription.endpoint);
+    const deviceData = {
+      subscription,
+      alerts: alerts || [{ type: 'daily_rate', enabled: true }],
+      updatedAt: new Date().toISOString(),
+    };
+
+    await env.TASAVE_KV.put(
+      `alert_device_${subHash}`,
+      JSON.stringify(deviceData),
+      { expirationTtl: 60 * 60 * 24 * 90 }
+    );
+
+    return jsonResponse({ status: 'subscribed', id: subHash });
   } catch (err) {
-    console.error('FCM send error:', err.message);
+    return jsonResponse({ error: 'Error registrando suscripción push' }, 500);
+  }
+}
+
+async function handlePushUnsubscribe(request, env) {
+  try {
+    const body = await request.json();
+    const { endpoint } = body;
+    if (!endpoint) return jsonResponse({ error: 'endpoint requerido' }, 400);
+
+    const subHash = await hashToken(endpoint);
+    await env.TASAVE_KV.delete(`alert_device_${subHash}`);
+    return jsonResponse({ status: 'unsubscribed' });
+  } catch (err) {
+    return jsonResponse({ error: 'Error eliminando suscripción' }, 500);
+  }
+}
+
+// ── Sistema de notificaciones push ───────────────────────────────────────────
+// Límite Cloudflare Free: 50 subrequests por invocación de cron.
+// Enviamos en lotes de MAX_BATCH para no superarlo (cada push = 1 subrequest).
+const MAX_BATCH = 40;
+
+/**
+ * Envía una notificación a todos los suscriptores que tengan habilitado `alertType`.
+ * Respeta MAX_BATCH para no superar el límite de subrequests del plan free.
+ */
+async function broadcastNotification(env, alertType, payload) {
+  let cursor = undefined;
+  let hasMore = true;
+  let sent = 0;
+  let batch = 0;
+
+  while (hasMore && batch < MAX_BATCH) {
+    const listed = await env.TASAVE_KV.list({ prefix: 'alert_device_', cursor, limit: 50 });
+    hasMore = !listed.list_complete;
+    cursor = listed.cursor;
+
+    for (const key of listed.keys) {
+      if (batch >= MAX_BATCH) break;
+      const deviceData = await env.TASAVE_KV.get(key.name, 'json');
+      if (!deviceData?.subscription) continue;
+
+      // Respetar preferencia del usuario — si el tipo está explícitamente desactivado, saltar
+      const pref = deviceData.alerts?.find(a => a.type === alertType);
+      if (pref && pref.enabled === false) continue;
+
+      const result = await sendWebPush(env, deviceData.subscription, payload);
+      batch++;
+      if (result.expired) {
+        await env.TASAVE_KV.delete(key.name);
+      } else if (result.success) {
+        sent++;
+      }
+    }
+  }
+
+  console.log(`[push:${alertType}] enviadas: ${sent}`);
+  return sent;
+}
+
+/**
+ * Construye y despacha todas las notificaciones según el contexto actual.
+ * Se llama desde scheduled() después de fetchAndStoreRate().
+ */
+async function sendSmartNotifications(env) {
+  const currentRate = await env.TASAVE_KV.get(KV_KEYS.CURRENT_RATE, 'json');
+  if (!currentRate) return;
+
+  const history = await env.TASAVE_KV.get(KV_KEYS.HISTORY, 'json') || [];
+  const now = new Date();
+  const utcHour = now.getUTCHours();
+  const utcDay = now.getUTCDay(); // 0=Dom, 1=Lun
+
+  // ── Calcular métricas ──────────────────────────────────────────────────────
+  const bcvUsd = currentRate.bcvUsd;
+  const p2p = currentRate.usdtP2P;
+  const eur = currentRate.bcvEur || 0;
+  const yesterday = history[1]; // history[0] es hoy, history[1] es ayer
+  const variation = yesterday ? ((bcvUsd - yesterday.bcvUsd) / yesterday.bcvUsd * 100) : 0;
+  const spread = p2p && bcvUsd ? ((p2p - bcvUsd) / bcvUsd * 100) : 0;
+  const allTimeHigh = history.length > 0 ? Math.max(...history.map(e => e.bcvUsd)) : 0;
+  const variationStr = (variation >= 0 ? '+' : '') + variation.toFixed(2) + '%';
+
+  // ── 1. TASA DIARIA — enviar solo en ventana BCV (20-22 UTC) ───────────────
+  if (utcHour >= BCV_WINDOW_END_UTC && utcHour < BCV_WINDOW_END_UTC + 2) {
+    // Solo si la tasa es de hoy (no caché antigua)
+    const today = now.toISOString().split('T')[0];
+    const rateIsToday = currentRate.timestamp?.startsWith(today);
+
+    if (rateIsToday) {
+      const trendIcon = variation > 0 ? '📈' : variation < 0 ? '📉' : '➡️';
+      await broadcastNotification(env, 'daily_rate', {
+        title: `${trendIcon} BCV hoy: ${bcvUsd.toFixed(2)} Bs/$`,
+        body: p2p
+          ? `P2P: ${p2p.toFixed(2)} Bs · Spread ${spread.toFixed(1)}% · Variación ${variationStr}`
+          : `Variación: ${variationStr} · EUR: ${eur.toFixed(2)} Bs/€`,
+        icon: '/icons/Icon-192.png',
+        data: { url: '/', type: 'daily_rate' },
+      });
+    }
+  }
+
+  // ── 2. CAMBIO GRANDE — variación ≥ 1% respecto a ayer ────────────────────
+  if (Math.abs(variation) >= 1.0) {
+    const alreadySent = await env.TASAVE_KV.get(`notif_big_change_${now.toISOString().split('T')[0]}`);
+    if (!alreadySent) {
+      const dir = variation > 0 ? 'subió' : 'bajó';
+      const icon = variation > 0 ? '🚨' : '⚠️';
+      await broadcastNotification(env, 'rate_change_big', {
+        title: `${icon} La tasa ${dir} ${Math.abs(variation).toFixed(1)}%`,
+        body: `BCV: ${bcvUsd.toFixed(2)} Bs/$ · ${variationStr} vs ayer · Toca para calcular`,
+        icon: '/icons/Icon-192.png',
+        data: { url: '/', type: 'rate_change_big' },
+      });
+      // Marcar como enviada hoy para no repetir
+      await env.TASAVE_KV.put(`notif_big_change_${now.toISOString().split('T')[0]}`, '1', { expirationTtl: 86400 });
+    }
+  }
+
+  // ── 3. SPREAD ALTO — P2P supera BCV + 5% ─────────────────────────────────
+  if (spread >= 5.0) {
+    const alreadySent = await env.TASAVE_KV.get(`notif_spread_${now.toISOString().split('T')[0]}`);
+    if (!alreadySent) {
+      await broadcastNotification(env, 'spread_alert', {
+        title: `🔔 Spread P2P/BCV alto: ${spread.toFixed(1)}%`,
+        body: `BCV: ${bcvUsd.toFixed(2)} · P2P: ${p2p.toFixed(2)} Bs · Brecha inusual en el mercado`,
+        icon: '/icons/Icon-192.png',
+        data: { url: '/', type: 'spread_alert' },
+      });
+      await env.TASAVE_KV.put(`notif_spread_${now.toISOString().split('T')[0]}`, '1', { expirationTtl: 86400 });
+    }
+  }
+
+  // ── 4. MÁXIMO HISTÓRICO ────────────────────────────────────────────────────
+  if (bcvUsd > allTimeHigh && allTimeHigh > 0) {
+    const alreadySent = await env.TASAVE_KV.get(`notif_ath_${now.toISOString().split('T')[0]}`);
+    if (!alreadySent) {
+      await broadcastNotification(env, 'rate_new_high', {
+        title: `🏆 Nuevo máximo histórico: ${bcvUsd.toFixed(2)} Bs/$`,
+        body: `La tasa BCV supera el récord anterior de ${allTimeHigh.toFixed(2)} Bs/$`,
+        icon: '/icons/Icon-192.png',
+        data: { url: '/history', type: 'rate_new_high' },
+      });
+      await env.TASAVE_KV.put(`notif_ath_${now.toISOString().split('T')[0]}`, '1', { expirationTtl: 86400 });
+    }
+  }
+
+  // ── 5. BCV NO PUBLICÓ — si son las 7PM VET (23 UTC) sin tasa de hoy ───────
+  if (utcHour === 23) {
+    const today = now.toISOString().split('T')[0];
+    const rateIsToday = currentRate.timestamp?.startsWith(today);
+    const alreadySent = await env.TASAVE_KV.get(`notif_no_rate_${today}`);
+    if (!rateIsToday && !alreadySent) {
+      await broadcastNotification(env, 'bcv_closed', {
+        title: `ℹ️ BCV no publicó tasa hoy`,
+        body: `Usando la tasa del día anterior: ${bcvUsd.toFixed(2)} Bs/$. Actualizamos en cuanto esté disponible.`,
+        icon: '/icons/Icon-192.png',
+        data: { url: '/', type: 'bcv_closed' },
+      });
+      await env.TASAVE_KV.put(`notif_no_rate_${today}`, '1', { expirationTtl: 86400 });
+    }
+  }
+
+  // ── 6. RESUMEN SEMANAL — lunes 12 UTC (8 AM VET) ─────────────────────────
+  if (utcDay === 1 && utcHour === 12) {
+    const alreadySent = await env.TASAVE_KV.get(`notif_weekly_${now.toISOString().split('T')[0]}`);
+    if (!alreadySent && history.length >= 7) {
+      const week = history.slice(0, 7);
+      const weekMin = Math.min(...week.map(e => e.bcvUsd));
+      const weekMax = Math.max(...week.map(e => e.bcvUsd));
+      const weekStart = week[week.length - 1].bcvUsd;
+      const weekChange = ((bcvUsd - weekStart) / weekStart * 100);
+      const weekChangeStr = (weekChange >= 0 ? '+' : '') + weekChange.toFixed(2) + '%';
+
+      await broadcastNotification(env, 'weekly_summary', {
+        title: `📊 Resumen semanal — ${weekChangeStr}`,
+        body: `BCV esta semana: mín ${weekMin.toFixed(2)} · máx ${weekMax.toFixed(2)} · hoy ${bcvUsd.toFixed(2)} Bs/$`,
+        icon: '/icons/Icon-192.png',
+        data: { url: '/history', type: 'weekly_summary' },
+      });
+      await env.TASAVE_KV.put(`notif_weekly_${now.toISOString().split('T')[0]}`, '1', { expirationTtl: 86400 });
+    }
   }
 }
 
@@ -503,6 +713,9 @@ async function appendToHistory(env, rateData) {
   // Calcular variación respecto al día anterior
   const lastEntry = history[0];
   const variation = lastEntry ? Math.round((rateData.bcvUsd - lastEntry.bcvUsd) * 100) / 100 : 0;
+  const variationPct = (lastEntry && lastEntry.bcvUsd > 0)
+    ? Math.round((variation / lastEntry.bcvUsd) * 10000) / 100  // 2 decimales
+    : 0;
 
   // Si ya hay entrada de hoy, actualizarla
   const todayIndex = history.findIndex(e => e.date.startsWith(today));
@@ -511,6 +724,7 @@ async function appendToHistory(env, rateData) {
     bcvUsd: rateData.bcvUsd,
     bcvEur: rateData.bcvEur,
     variation: variation,
+    variationPct: variationPct,
   };
 
   if (todayIndex >= 0) {

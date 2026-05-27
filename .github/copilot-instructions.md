@@ -58,3 +58,11 @@ class TasaModel {
 - ❌ Cambiar colores/fuentes sin aprobación
 - ❌ Inventar datos falsos (multiplicadores, % fake)
 - ❌ Requests sin fallback a caché
+
+## Respaldo Oficial de Version
+- Version oficial de retorno: `respaldo/version-real-2026-05-26`
+- Regla: ante errores o cambios no deseados, regresar a esta version de respaldo, no a snapshots antiguos.
+- Comando recomendado:
+  - `git checkout main`
+  - `git reset --hard respaldo/version-real-2026-05-26`
+  - `git clean -fd`

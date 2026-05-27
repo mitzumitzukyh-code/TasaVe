@@ -86,11 +86,11 @@ class AlertsState {
         type: 'ritmo_inusual',
       ),
       AlertConfig(
-        id: 'spread_above',
-        label: 'Spread supere',
+        id: 'p2p_above',
+        label: 'P2P supere',
         enabled: false,
         threshold: 4.0, // %
-        type: 'spread_above',
+        type: 'p2p_above',
       ),
     ],
   );
@@ -167,22 +167,13 @@ class AlertsNotifier extends StateNotifier<AlertsState> {
   }
 
   Future<void> _syncWithBackend() async {
-    if (state.fcmToken == null) return;
-    try {
-      final service = _ref.read(bcvServiceProvider);
-      await service.syncAlertPreferences(
-        token: state.fcmToken!,
-        alerts: state.alerts,
-      );
-    } catch (_) {
-      // silently fail — will retry on next sync
-    }
+    // Alerts backend sync removed — feature deprecated
   }
 
   /// Evalúa alertas localmente contra datos frescos
   List<String> evaluateAlerts({
     required double bcvUsd,
-    required double spreadPercent,
+    required double usdtP2P,
   }) {
     final triggered = <String>[];
     for (final alert in state.alerts) {
@@ -193,13 +184,13 @@ class AlertsNotifier extends StateNotifier<AlertsState> {
             triggered.add('BCV alcanzó ${bcvUsd.toStringAsFixed(2)} Bs/\$ (umbral: ${alert.threshold.toStringAsFixed(2)})');
           }
           break;
-        case 'spread_above':
-          if (spreadPercent.abs() >= alert.threshold) {
-            triggered.add('Spread en ${spreadPercent.toStringAsFixed(1)}% (umbral: ${alert.threshold.toStringAsFixed(1)}%)');
+        case 'p2p_above':
+          final diff = bcvUsd > 0 ? ((usdtP2P - bcvUsd) / bcvUsd * 100).abs() : 0.0;
+          if (diff >= alert.threshold) {
+            triggered.add('Diferencia P2P en ${diff.toStringAsFixed(1)}% (umbral: ${alert.threshold.toStringAsFixed(1)}%)');
           }
           break;
         case 'ritmo_inusual':
-          // This is evaluated on the backend with historical comparison
           break;
       }
     }

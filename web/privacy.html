@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TasaVe — Política de Privacidad</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --red: #E53935;
+      --bg: #F2F2F2;
+      --bg2: #FFFFFF;
+      --border: rgba(0,0,0,0.08);
+      --text: #1A1A1A;
+      --text2: #757575;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'DM Sans', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.7;
+    }
+    .wrap {
+      max-width: 700px;
+      margin: 0 auto;
+      padding: 3rem 1.5rem 5rem;
+    }
+    .back {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      color: var(--text2);
+      text-decoration: none;
+      margin-bottom: 2.5rem;
+      transition: color .2s;
+    }
+    .back:hover { color: var(--text); }
+    .badge {
+      display: inline-block;
+      font-size: 11px;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: var(--red);
+      border: 0.5px solid var(--red);
+      padding: 3px 12px;
+      border-radius: 20px;
+      margin-bottom: 1rem;
+    }
+    h1 {
+      font-size: clamp(1.6rem, 5vw, 2.2rem);
+      font-weight: 700;
+      margin-bottom: .5rem;
+    }
+    .updated {
+      font-size: 12px;
+      color: var(--text2);
+      margin-bottom: 3rem;
+    }
+    .section {
+      background: var(--bg2);
+      border: 0.5px solid var(--border);
+      border-radius: 14px;
+      padding: 1.25rem 1.5rem;
+      margin-bottom: 12px;
+    }
+    h2 {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--red);
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      margin-bottom: .75rem;
+    }
+    p, li {
+      font-size: 14px;
+      color: var(--text2);
+    }
+    ul {
+      padding-left: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    li strong, p strong { color: var(--text); }
+    .footer-link {
+      display: block;
+      text-align: center;
+      margin-top: 3rem;
+      font-size: 13px;
+      color: var(--text2);
+      text-decoration: none;
+    }
+    .footer-link span { color: var(--red); }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <a class="back" href="https://tasave-app.pages.dev/">← Volver a TasaVe</a>
+
+    <div class="badge">Legal</div>
+    <h1>Política de Privacidad</h1>
+    <p class="updated">Última actualización: mayo 2026</p>
+
+    <div class="section">
+      <h2>1. Quiénes somos</h2>
+      <p>TasaVe es una aplicación móvil para consultar tasas de cambio referenciales (BCV y mercado) y realizar cálculos de conversión. No estamos afiliados al Banco Central de Venezuela (BCV).</p>
+    </div>
+
+    <div class="section">
+      <h2>2. Datos que recopilamos</h2>
+      <ul>
+        <li><strong>Tasas de cambio:</strong> se obtienen de APIs públicas; no enviamos datos personales para consultarlas.</li>
+        <li><strong>Perfiles de pago y QR:</strong> se guardan únicamente en tu dispositivo (almacenamiento local), nunca en nuestros servidores.</li>
+        <li><strong>Escáner de facturas:</strong> la cámara procesa la imagen localmente en el dispositivo; no subimos fotos a servidores propios.</li>
+        <li><strong>Suscripción Pro:</strong> Google Play procesa los pagos; TasaVe no almacena datos de tarjeta ni información bancaria.</li>
+        <li><strong>Publicidad (versión gratuita):</strong> Google AdMob puede recopilar identificadores anónimos de dispositivo según su propia política.</li>
+      </ul>
+    </div>
+
+    <div class="section">
+      <h2>3. Permisos de la app</h2>
+      <ul>
+        <li><strong>Internet:</strong> necesario para actualizar tasas de cambio en tiempo real.</li>
+        <li><strong>Cámara:</strong> opcional, solo para escanear facturas con OCR.</li>
+        <li><strong>Facturación in-app:</strong> para gestionar la suscripción Pro vía Google Play.</li>
+      </ul>
+    </div>
+
+    <div class="section">
+      <h2>4. Compartir con terceros</h2>
+      <p>Compartimos datos mínimos únicamente con:</p>
+      <ul>
+        <li>Google AdMob — anuncios en versión gratuita</li>
+        <li>Google Play Billing — gestión de suscripciones</li>
+        <li>APIs de tasas — solicitudes anónimas de cotización sin datos personales</li>
+      </ul>
+    </div>
+
+    <div class="section">
+      <h2>5. Descargo financiero</h2>
+      <p>Las tasas mostradas son <strong>estrictamente referenciales</strong>. No constituyen asesoría financiera, cambiaria ni legal. La tasa de mercado paralelo es una referencia estadística descentralizada, no un precio oficial.</p>
+    </div>
+
+    <div class="section">
+      <h2>6. Tus derechos</h2>
+      <p>Puedes eliminar todos los datos locales desinstalando la app o borrando perfiles desde la sección <strong>Perfil</strong>. Para gestionar o cancelar tu suscripción, hazlo directamente desde Google Play.</p>
+    </div>
+
+    <div class="section">
+      <h2>7. Contacto</h2>
+      <p>Para consultas sobre privacidad, contacta a través de la ficha de la app en Google Play Store.</p>
+    </div>
+
+    <a class="footer-link" href="https://tasave-app.pages.dev/">
+      © 2026 <span>TasaVe</span> — Todos los derechos reservados
+    </a>
+  </div>
+</body>
+</html>

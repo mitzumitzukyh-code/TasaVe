@@ -4,7 +4,8 @@ class Formatters {
   Formatters._();
 
   static String formatRate(double rate) {
-    return rate.toStringAsFixed(2);
+    final formatter = NumberFormat('#,##0.00', 'es_VE');
+    return formatter.format(rate);
   }
 
   static String formatCurrency(double amount) {

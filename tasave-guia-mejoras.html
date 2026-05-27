@@ -1,0 +1,911 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TasaVe — Guía de Mejoras UI/UX para Windsurf</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=DM+Sans:wght@300;400;500&family=DM+Mono&display=swap" rel="stylesheet">
+<style>
+:root {
+  --red: #e8452a;
+  --red-dark: #b83318;
+  --green: #2d6a4f;
+  --green-light: #d8f3dc;
+  --amber: #e9c46a;
+  --amber-dark: #f4a261;
+  --bg: #f5f2ee;
+  --white: #ffffff;
+  --ink: #1a1a18;
+  --ink2: #555550;
+  --ink3: #999990;
+  --border: rgba(0,0,0,0.1);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  line-height: 1.6;
+}
+
+/* HEADER */
+.site-header {
+  background: var(--ink);
+  color: #fff;
+  padding: 3rem 2rem 2rem;
+  position: relative;
+  overflow: hidden;
+}
+.site-header::before {
+  content: '';
+  position: absolute;
+  top: -60px; right: -60px;
+  width: 200px; height: 200px;
+  background: var(--red);
+  border-radius: 50%;
+  opacity: .15;
+}
+.header-tag {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  letter-spacing: .15em;
+  color: var(--red);
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+.header-title {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(28px, 5vw, 48px);
+  font-weight: 600;
+  line-height: 1.15;
+  margin-bottom: 12px;
+}
+.header-sub {
+  font-size: 15px;
+  color: rgba(255,255,255,.6);
+  max-width: 560px;
+}
+.header-meta {
+  margin-top: 2rem;
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+.meta-chip {
+  background: rgba(255,255,255,.08);
+  border: 1px solid rgba(255,255,255,.15);
+  border-radius: 20px;
+  padding: 5px 14px;
+  font-size: 12px;
+  color: rgba(255,255,255,.7);
+}
+
+/* NAV PILLS */
+.nav-pills {
+  background: var(--white);
+  border-bottom: 1px solid var(--border);
+  padding: .75rem 2rem;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.nav-pill {
+  font-size: 12px;
+  font-weight: 500;
+  padding: 5px 14px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  cursor: pointer;
+  background: transparent;
+  color: var(--ink2);
+  transition: all .15s;
+  text-decoration: none;
+}
+.nav-pill:hover, .nav-pill.active {
+  background: var(--red);
+  color: #fff;
+  border-color: var(--red);
+}
+
+/* MAIN */
+main { max-width: 1100px; margin: 0 auto; padding: 3rem 2rem; }
+
+/* SECTION */
+.section { margin-bottom: 4rem; scroll-margin-top: 80px; }
+.section-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: .15em;
+  color: var(--red);
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+.section-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 26px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+.section-desc {
+  font-size: 14px;
+  color: var(--ink2);
+  max-width: 640px;
+  margin-bottom: 2rem;
+}
+
+/* COMPARE LAYOUT */
+.compare-wrap {
+  display: grid;
+  grid-template-columns: 1fr 60px 1fr;
+  gap: 0;
+  align-items: start;
+  margin-bottom: 1.5rem;
+}
+.compare-arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  color: var(--ink3);
+  padding-top: 60px;
+}
+.phone-wrap { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.phone-label {
+  font-size: 11px;
+  font-weight: 500;
+  padding: 4px 12px;
+  border-radius: 20px;
+}
+.label-before { background: #fde8e4; color: #b83318; }
+.label-after  { background: var(--green-light); color: var(--green); }
+
+/* PHONE MOCKUP */
+.phone {
+  width: 200px;
+  border-radius: 24px;
+  overflow: hidden;
+  border: 2px solid #ddd;
+  background: #fff;
+  box-shadow: 0 8px 30px rgba(0,0,0,.12);
+  font-family: 'DM Sans', sans-serif;
+}
+.phone.after { border-color: #2d6a4f; }
+
+/* PHONE INTERNALS */
+.ph-header { background: var(--red); padding: 10px 12px; }
+.ph-header.dark { background: #c83318; }
+.ph-app-name { color: #fff; font-weight: 700; font-size: 14px; }
+.ph-app-name.serif { font-family: 'Playfair Display', serif; font-weight: 600; font-size: 15px; letter-spacing: .2px; }
+.ph-tag { background: rgba(255,255,255,.2); color: #fff; font-size: 8px; padding: 2px 6px; border-radius: 10px; }
+.ph-row { display: flex; align-items: center; justify-content: space-between; }
+.ph-sub { color: rgba(255,255,255,.7); font-size: 8px; margin-top: 3px; }
+
+.ph-calc { background: #c83318; margin: 8px; border-radius: 10px; padding: 10px; }
+.ph-usd { color: rgba(255,255,255,.6); font-size: 9px; }
+.ph-big { color: #fff; font-size: 22px; font-weight: 700; line-height: 1.1; }
+.ph-big.serif { font-family: 'Playfair Display', serif; font-size: 24px; font-weight: 400; letter-spacing: .3px; }
+.ph-divider { height: 1px; background: rgba(255,255,255,.15); margin: 6px 0; }
+.ph-bs { color: #fff; font-size: 15px; font-weight: 600; }
+.ph-bs.serif { font-family: 'Playfair Display', serif; font-size: 16px; font-weight: 400; }
+
+.ph-pills { display: flex; gap: 4px; padding: 6px 8px; flex-wrap: wrap; }
+.ph-pill { background: rgba(232,69,42,.12); color: var(--red); font-size: 8px; padding: 3px 7px; border-radius: 10px; }
+.ph-pill.active { background: var(--red); color: #fff; font-weight: 600; }
+
+.ph-other { font-size: 9px; color: #888; padding: 4px 10px; display: flex; justify-content: space-between; }
+.ph-row-item { display: flex; justify-content: space-between; align-items: center; padding: 4px 10px; font-size: 10px; }
+
+.ph-ad-big { background: #fff9e0; margin: 4px 8px; padding: 5px 8px; border-radius: 6px; font-size: 8px; color: #e8452a; border: 1px solid #fac775; }
+.ph-notice { background: #fff9e0; margin: 4px 8px; padding: 4px 8px; border-radius: 6px; font-size: 8px; color: #856404; display: flex; align-items: center; gap: 3px; }
+.ph-promo { font-size: 8px; color: var(--ink3); text-align: center; padding: 3px; }
+.ph-promo a { color: var(--red); text-decoration: none; }
+
+.ph-nav { display: flex; border-top: 1px solid #eee; }
+.ph-nav-item { flex: 1; text-align: center; padding: 5px 2px; font-size: 7px; color: #aaa; }
+.ph-nav-item.act { color: var(--red); font-weight: 600; background: #fff3f0; border-radius: 6px; margin: 2px; }
+.ph-nav-badge { background: var(--red); color: #fff; font-size: 6px; padding: 1px 4px; border-radius: 8px; vertical-align: middle; margin-left: 2px; }
+
+.ph-copy-btn { background: rgba(255,255,255,.15); border: none; border-radius: 4px; padding: 2px 5px; font-size: 7px; color: #fff; cursor: pointer; }
+.ph-green { color: #2d6a4f; font-weight: 600; }
+
+/* ANNOTATIONS */
+.annotations { display: flex; flex-direction: column; gap: 8px; margin-top: 1rem; }
+.annotation {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 12px;
+}
+.annotation.bad { background: #fde8e4; border-left: 3px solid var(--red); }
+.annotation.good { background: var(--green-light); border-left: 3px solid var(--green); }
+.ann-icon { font-size: 14px; flex-shrink: 0; margin-top: 1px; }
+.ann-text { color: var(--ink); line-height: 1.5; }
+.ann-text strong { display: block; font-weight: 500; }
+
+/* ISSUE CARDS */
+.issues-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-bottom: 1.5rem; }
+.issue-card {
+  background: var(--white);
+  border-radius: 12px;
+  padding: 16px;
+  border: 1px solid var(--border);
+}
+.iss-priority {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  letter-spacing: .1em;
+  padding: 3px 8px;
+  border-radius: 20px;
+  display: inline-block;
+  margin-bottom: 8px;
+}
+.p-high { background: #fde8e4; color: #b83318; }
+.p-mid  { background: #fff3cd; color: #856404; }
+.p-low  { background: var(--green-light); color: var(--green); }
+.iss-title { font-weight: 500; font-size: 14px; margin-bottom: 4px; }
+.iss-desc { font-size: 12px; color: var(--ink2); line-height: 1.5; }
+.iss-fix { margin-top: 8px; font-size: 11px; font-weight: 500; color: var(--green); background: var(--green-light); padding: 4px 10px; border-radius: 6px; display: inline-block; }
+
+/* CODE BLOCKS */
+.code-block {
+  background: #1a1a18;
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin: 1rem 0;
+  overflow-x: auto;
+}
+.code-block pre {
+  font-family: 'DM Mono', monospace;
+  font-size: 12px;
+  color: #e2e2d9;
+  line-height: 1.7;
+}
+.code-comment { color: #666; }
+.code-key { color: #e9c46a; }
+.code-val { color: #a8e6cf; }
+.code-str { color: #ff9a9a; }
+
+/* ROADMAP */
+.roadmap { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.rm-phase {
+  background: var(--white);
+  border-radius: 12px;
+  padding: 20px;
+  border: 1px solid var(--border);
+  position: relative;
+}
+.rm-phase::before {
+  content: attr(data-num);
+  position: absolute;
+  top: -12px; left: 16px;
+  background: var(--ink);
+  color: #fff;
+  font-family: 'Playfair Display', serif;
+  font-size: 18px;
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+}
+.rm-title { font-weight: 500; font-size: 14px; margin-bottom: 4px; margin-top: 8px; }
+.rm-sub { font-size: 11px; color: var(--ink3); margin-bottom: 12px; }
+.rm-item { font-size: 12px; color: var(--ink2); padding: 4px 0; border-bottom: 1px solid var(--border); display: flex; gap: 8px; align-items: flex-start; }
+.rm-item:last-child { border-bottom: none; }
+.rm-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--red); flex-shrink: 0; margin-top: 6px; }
+
+/* MONETIZATION */
+.mono-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.mono-card {
+  background: var(--white);
+  border-radius: 12px;
+  padding: 20px;
+  border: 1px solid var(--border);
+}
+.mono-card.featured { border: 2px solid var(--green); }
+.mono-title { font-family: 'Playfair Display', serif; font-size: 18px; font-weight: 600; margin-bottom: 4px; }
+.mono-price { font-size: 28px; font-weight: 300; color: var(--red); margin-bottom: 12px; }
+.mono-price span { font-size: 13px; color: var(--ink3); }
+.mono-feature { font-size: 12px; color: var(--ink2); padding: 5px 0; border-bottom: 1px solid var(--border); display: flex; gap: 8px; }
+.mono-feature:last-child { border-bottom: none; }
+.feat-check { color: var(--green); font-weight: 700; }
+.feat-x { color: var(--ink3); }
+
+/* WINDSURF INSTRUCTIONS */
+.instruction-block {
+  background: #0f1117;
+  border-radius: 12px;
+  padding: 20px 24px;
+  margin-bottom: 16px;
+  border-left: 3px solid var(--red);
+}
+.inst-tag {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  color: var(--red);
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.inst-title { color: #fff; font-size: 14px; font-weight: 500; margin-bottom: 8px; }
+.inst-desc { color: rgba(255,255,255,.6); font-size: 12px; line-height: 1.7; }
+.inst-desc code { background: rgba(255,255,255,.08); padding: 1px 5px; border-radius: 3px; font-family: 'DM Mono', monospace; color: var(--amber); }
+
+/* DIVIDER */
+.divider { height: 1px; background: var(--border); margin: 3rem 0; }
+
+/* SUMMARY BOX */
+.summary-box {
+  background: var(--ink);
+  color: #fff;
+  border-radius: 16px;
+  padding: 2rem;
+  margin-top: 3rem;
+}
+.sum-title { font-family: 'Playfair Display', serif; font-size: 22px; margin-bottom: 1rem; }
+.sum-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; }
+.sum-num { font-family: 'Playfair Display', serif; font-size: 36px; color: var(--red); }
+.sum-label { font-size: 12px; color: rgba(255,255,255,.5); margin-top: 2px; }
+
+@media (max-width: 700px) {
+  .compare-wrap { grid-template-columns: 1fr; }
+  .compare-arrow { display: none; }
+  .roadmap, .mono-grid, .sum-grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="header-tag">Documento de diseño · TasaVe App</div>
+  <h1 class="header-title">Guía de Mejoras UI/UX<br>para Implementación</h1>
+  <p class="header-sub">Análisis detallado con mockups antes/después, instrucciones para Windsurf + Claude Opus, y hoja de ruta de monetización.</p>
+  <div class="header-meta">
+    <span class="meta-chip">📱 Android App</span>
+    <span class="meta-chip">🎯 Objetivo: superar AlCambio</span>
+    <span class="meta-chip">💰 Monetización: ads + Pro $1.99/mes</span>
+    <span class="meta-chip">🔧 Stack: Flutter / Android nativo</span>
+  </div>
+</header>
+
+<nav class="nav-pills">
+  <a href="#problemas" class="nav-pill">Problemas</a>
+  <a href="#tipografia" class="nav-pill">Tipografía</a>
+  <a href="#inicio" class="nav-pill">Pantalla Inicio</a>
+  <a href="#perfil" class="nav-pill">Perfil & Pagos</a>
+  <a href="#monetizacion" class="nav-pill">Monetización</a>
+  <a href="#windsurf" class="nav-pill">Guía Windsurf</a>
+  <a href="#roadmap" class="nav-pill">Roadmap</a>
+</nav>
+
+<main>
+
+<!-- PROBLEMAS -->
+<section class="section" id="problemas">
+  <div class="section-label">01 · Diagnóstico</div>
+  <h2 class="section-title">Problemas detectados en la app actual</h2>
+  <p class="section-desc">Análisis de las 17 capturas de pantalla proporcionadas. Ordenados por impacto en retención y conversión Pro.</p>
+
+  <div class="issues-grid">
+    <div class="issue-card">
+      <span class="iss-priority p-high">CRÍTICO</span>
+      <div class="iss-title">Tipografía genérica para números</div>
+      <div class="iss-desc">Los números de la tasa usan sans-serif sin carácter. AlCambio usa serif para los valores: transmite confianza y legibilidad financiera.</div>
+      <span class="iss-fix">→ Usar Playfair Display o similar para valores monetarios</span>
+    </div>
+    <div class="issue-card">
+      <span class="iss-priority p-high">CRÍTICO</span>
+      <div class="iss-title">CTA Pro agresivo en pantalla inicio</div>
+      <div class="iss-desc">"Hazte Premium para eliminar publicidad" aparece prominente en el inicio. Esto genera rechazo inmediato antes de que el usuario vea el valor de la app.</div>
+      <span class="iss-fix">→ Mover a Perfil, en inicio solo banner discreto al fondo</span>
+    </div>
+    <div class="issue-card">
+      <span class="iss-priority p-high">CRÍTICO</span>
+      <div class="iss-title">Jerarquía visual rota</div>
+      <div class="iss-desc">La tasa BCV (el dato más importante) no domina visualmente la pantalla. Compite con elementos secundarios como EUR y P2P.</div>
+      <span class="iss-fix">→ El número BCV debe ser 2x más grande que cualquier otro dato</span>
+    </div>
+    <div class="issue-card">
+      <span class="iss-priority p-mid">IMPORTANTE</span>
+      <div class="iss-title">Alertas enterradas</div>
+      <div class="iss-desc">Las alertas de tasa están en un submenú. Los usuarios no descubren esta función (ventaja competitiva) porque no es visible desde el inicio.</div>
+      <span class="iss-fix">→ Ícono de campana en navbar con badge contador</span>
+    </div>
+    <div class="issue-card">
+      <span class="iss-priority p-mid">IMPORTANTE</span>
+      <div class="iss-title">Pantalla Perfil confusa para usuario nuevo</div>
+      <div class="iss-desc">El estado vacío de "Sin perfiles de pago" muestra inmediatamente el bloqueo Pro encima. El usuario no entiende qué puede hacer gratis.</div>
+      <span class="iss-fix">→ Permitir 1 perfil gratis, Pro muestra el upsell después</span>
+    </div>
+    <div class="issue-card">
+      <span class="iss-priority p-mid">IMPORTANTE</span>
+      <div class="iss-title">Escáner de facturas sin onboarding</div>
+      <div class="iss-desc">La pantalla del escáner solo muestra un ícono vacío. Es la función más diferenciadora vs AlCambio y no está siendo vendida correctamente.</div>
+      <span class="iss-fix">→ Agregar 2-3 pasos de onboarding ilustrados la primera vez</span>
+    </div>
+    <div class="issue-card">
+      <span class="iss-priority p-low">MEJORA</span>
+      <div class="iss-title">Modo oscuro inconsistente</div>
+      <div class="iss-desc">El modo oscuro activa textos con fondo blanco en algunos elementos, creando inconsistencias visuales.</div>
+      <span class="iss-fix">→ Revisar todos los containers con fondo explícito</span>
+    </div>
+    <div class="issue-card">
+      <span class="iss-priority p-low">MEJORA</span>
+      <div class="iss-title">Compartir tasa sin imagen</div>
+      <div class="iss-desc">El share solo copia texto plano. AlCambio genera imágenes compartibles para WhatsApp: mucho más viral.</div>
+      <span class="iss-fix">→ Generar imagen PNG con la tasa del día para compartir</span>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- TIPOGRAFÍA -->
+<section class="section" id="tipografia">
+  <div class="section-label">02 · Tipografía</div>
+  <h2 class="section-title">Cambio tipográfico: la mejora más impactante</h2>
+  <p class="section-desc">El cambio de fuente en los números monetarios es el que más diferencia visual produce con el menor esfuerzo de implementación.</p>
+
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:2rem;">
+    <div style="background:var(--white); border-radius:12px; padding:24px; border:1px solid var(--border);">
+      <div style="font-family:'DM Mono',monospace; font-size:10px; color:var(--red); letter-spacing:.1em; margin-bottom:12px; text-transform:uppercase;">Antes — fuente actual</div>
+      <div style="font-size:36px; font-weight:700; color:var(--ink); line-height:1.1; margin-bottom:6px;">530,50</div>
+      <div style="font-size:20px; font-weight:600; color:var(--ink); margin-bottom:12px;">53.050,00</div>
+      <div style="font-size:12px; color:var(--ink3);">DM Sans Bold — sin carácter financiero</div>
+      <div style="margin-top:8px; background:#fde8e4; color:#b83318; font-size:11px; padding:5px 10px; border-radius:6px; display:inline-block;">❌ Genérica, poca confianza</div>
+    </div>
+    <div style="background:var(--white); border-radius:12px; padding:24px; border:2px solid var(--green);">
+      <div style="font-family:'DM Mono',monospace; font-size:10px; color:var(--green); letter-spacing:.1em; margin-bottom:12px; text-transform:uppercase;">Después — propuesta</div>
+      <div style="font-family:'Playfair Display',serif; font-size:36px; font-weight:400; color:var(--ink); line-height:1.1; margin-bottom:6px; letter-spacing:.5px;">530,50</div>
+      <div style="font-family:'Playfair Display',serif; font-size:20px; font-weight:400; color:var(--ink); margin-bottom:12px; letter-spacing:.3px;">53.050,00</div>
+      <div style="font-size:12px; color:var(--ink3);">Playfair Display — serif financiero, elegante</div>
+      <div style="margin-top:8px; background:var(--green-light); color:var(--green); font-size:11px; padding:5px 10px; border-radius:6px; display:inline-block;">✓ Premium, confiable, legible</div>
+    </div>
+  </div>
+
+  <div class="code-block">
+    <pre><span class="code-comment">// Fuentes a agregar en pubspec.yaml (Flutter) o build.gradle (Android)</span>
+<span class="code-key">fonts:</span>
+  <span class="code-key">- family:</span> <span class="code-str">PlayfairDisplay</span>
+    <span class="code-key">fonts:</span>
+      <span class="code-key">- asset:</span> <span class="code-str">assets/fonts/PlayfairDisplay-Regular.ttf</span>
+      <span class="code-key">- asset:</span> <span class="code-str">assets/fonts/PlayfairDisplay-SemiBold.ttf</span>
+        <span class="code-key">weight:</span> <span class="code-val">600</span>
+
+<span class="code-comment">// Uso en Flutter</span>
+<span class="code-key">Text</span>(<span class="code-str">'530,50'</span>,
+  <span class="code-key">style:</span> TextStyle(
+    <span class="code-key">fontFamily:</span> <span class="code-str">'PlayfairDisplay'</span>,
+    <span class="code-key">fontSize:</span> <span class="code-val">48</span>,
+    <span class="code-key">fontWeight:</span> FontWeight.w400,
+    <span class="code-key">letterSpacing:</span> <span class="code-val">0.5</span>,
+  ),
+),
+
+<span class="code-comment">// Usar Playfair SOLO en: tasa BCV, monto USD, monto Bs</span>
+<span class="code-comment">// Mantener DM Sans / Roboto para etiquetas y UI general</span></pre>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- PANTALLA INICIO -->
+<section class="section" id="inicio">
+  <div class="section-label">03 · Pantalla principal</div>
+  <h2 class="section-title">Inicio: antes vs después</h2>
+  <p class="section-desc">La pantalla de inicio es el momento de verdad. Debe comunicar la tasa BCV al instante, sin distracciones.</p>
+
+  <div class="compare-wrap">
+    <!-- ANTES -->
+    <div class="phone-wrap">
+      <span class="phone-label label-before">ANTES — Problemas actuales</span>
+      <div class="phone">
+        <div class="ph-header">
+          <div class="ph-row">
+            <span class="ph-app-name">TasaVe</span>
+            <div>
+              <span class="ph-tag">AL DÍA</span>
+            </div>
+          </div>
+          <div class="ph-sub">• BCV 530,50 Bs/$</div>
+        </div>
+        <div class="ph-calc">
+          <div class="ph-usd">$ USD</div>
+          <div class="ph-big">100,00</div>
+          <div class="ph-divider"></div>
+          <div class="ph-bs">Bs 53.050,00</div>
+        </div>
+        <div class="ph-pills">
+          <span class="ph-pill">$5</span><span class="ph-pill">$10</span>
+          <span class="ph-pill">$20</span><span class="ph-pill">$50</span>
+          <span class="ph-pill active">$100</span><span class="ph-pill">+IVA</span>
+        </div>
+        <div class="ph-other"><span>EUR BCV</span><span>615,50 Bs</span></div>
+        <div class="ph-other"><span>USDT P2P</span><span>733,41 Bs</span></div>
+        <div class="ph-ad-big">⚠ Monitoreando BCV (4:00–6:00 PM)</div>
+        <div class="ph-ad-big" style="color:var(--red)">🔒 Hazte Premium para eliminar publicidad — <strong>Ver Pro →</strong></div>
+        <div class="ph-nav">
+          <div class="ph-nav-item act">🏠<br>Inicio</div>
+          <div class="ph-nav-item">📷<br>Escanear</div>
+          <div class="ph-nav-item">📈<br>Historial</div>
+          <div class="ph-nav-item">👤<br>Perfil</div>
+        </div>
+      </div>
+      <div class="annotations">
+        <div class="annotation bad"><span class="ann-icon">🔤</span><div class="ann-text"><strong>Font sans-serif genérica</strong>Los números no transmiten confianza financiera.</div></div>
+        <div class="annotation bad"><span class="ann-icon">📢</span><div class="ann-text"><strong>CTA Pro invasivo</strong>Empuja al usuario a pagar antes de mostrar valor.</div></div>
+        <div class="annotation bad"><span class="ann-icon">🔔</span><div class="ann-text"><strong>Sin acceso a alertas</strong>La función de alertas es invisible en la navegación.</div></div>
+      </div>
+    </div>
+
+    <div class="compare-arrow">→</div>
+
+    <!-- DESPUÉS -->
+    <div class="phone-wrap">
+      <span class="phone-label label-after">DESPUÉS — Propuesta mejorada</span>
+      <div class="phone after">
+        <div class="ph-header dark">
+          <div class="ph-row">
+            <span class="ph-app-name serif">TasaVe</span>
+            <div style="display:flex;gap:5px;align-items:center">
+              <span class="ph-tag">AL DÍA</span>
+              <span style="font-size:12px;color:#fff">🔔</span>
+              <span style="font-size:12px;color:#fff">⚙</span>
+            </div>
+          </div>
+          <div class="ph-sub" style="display:flex;align-items:center;gap:6px;margin-top:4px">
+            <span>BCV · 530,50 Bs/$</span>
+            <span style="background:rgba(255,255,255,.15);padding:1px 5px;border-radius:8px;font-size:7px">hace 19 min</span>
+          </div>
+        </div>
+        <div class="ph-calc">
+          <div style="display:flex;gap:6px;align-items:baseline">
+            <span style="color:rgba(255,255,255,.45);font-size:8px">USD</span>
+            <div class="ph-big serif">100,00</div>
+          </div>
+          <div class="ph-divider"></div>
+          <div style="display:flex;justify-content:space-between;align-items:baseline">
+            <div>
+              <div style="color:rgba(255,255,255,.45);font-size:7px;letter-spacing:.05em">BOLÍVARES</div>
+              <div class="ph-bs serif">53.050,00</div>
+            </div>
+            <button class="ph-copy-btn">📋 Copiar</button>
+          </div>
+        </div>
+        <div class="ph-pills">
+          <span class="ph-pill">$5</span><span class="ph-pill">$10</span>
+          <span class="ph-pill">$20</span><span class="ph-pill">$50</span>
+          <span class="ph-pill active">$100</span><span class="ph-pill">+IVA</span>
+        </div>
+        <div style="font-size:8px;color:#999;padding:3px 10px;letter-spacing:.06em;margin-top:2px">OTRAS TASAS</div>
+        <div class="ph-row-item" style="background:#f9f9f9;border-radius:6px;margin:2px 8px;">
+          <span style="color:#666;font-size:9px">EUR BCV</span><span style="font-weight:600;font-size:10px">615,50 Bs</span>
+        </div>
+        <div class="ph-row-item" style="background:#f9f9f9;border-radius:6px;margin:2px 8px;">
+          <span style="color:#666;font-size:9px">USDT P2P</span>
+          <span class="ph-green" style="font-size:10px">733,41 Bs <span style="font-size:8px;color:#888">+38%</span></span>
+        </div>
+        <div class="ph-notice">⏰ <span>BCV publica entre 4:00–6:00 PM</span></div>
+        <div class="ph-promo">Plan gratuito · <a href="#">Ver TasaVe Pro →</a></div>
+        <div class="ph-nav">
+          <div class="ph-nav-item act">🏠<br>Inicio</div>
+          <div class="ph-nav-item">📷<br>Escanear</div>
+          <div class="ph-nav-item">📈<br>Historial</div>
+          <div class="ph-nav-item">👤<br>Perfil<span class="ph-nav-badge">PRO</span></div>
+        </div>
+      </div>
+      <div class="annotations">
+        <div class="annotation good"><span class="ann-icon">🔤</span><div class="ann-text"><strong>Serif para números</strong>Playfair Display en valores monetarios = confianza premium.</div></div>
+        <div class="annotation good"><span class="ann-icon">🔔</span><div class="ann-text"><strong>Alertas en header</strong>Ícono campana visible, siempre accesible desde inicio.</div></div>
+        <div class="annotation good"><span class="ann-icon">💸</span><div class="ann-text"><strong>Upsell sutil</strong>Solo texto pequeño al fondo. El usuario ya vio el valor primero.</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- PERFIL -->
+<section class="section" id="perfil">
+  <div class="section-label">04 · Perfil y Pagos</div>
+  <h2 class="section-title">Perfil: eliminar fricción para usuario nuevo</h2>
+  <p class="section-desc">El estado vacío actual genera frustración. El usuario nuevo debe poder crear 1 perfil gratis sin ver el muro de pago primero.</p>
+
+  <div class="compare-wrap">
+    <div class="phone-wrap">
+      <span class="phone-label label-before">ANTES — Bloqueo inmediato</span>
+      <div class="phone">
+        <div class="ph-header">
+          <span class="ph-app-name" style="font-size:16px">Perfil</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;padding:10px 10px;background:#fff4f2;border-bottom:1px solid #eee;font-size:9px;color:var(--red)">
+          <span>▣</span><div><div style="font-weight:600">Mi QR de Pago Móvil</div><div style="color:#888">Genera y comparte tu código QR</div></div>
+          <span style="margin-left:auto">›</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px">
+          <span style="font-size:11px;font-weight:600">Perfiles de pago</span>
+          <span style="background:#1a1a18;color:#fff;font-size:9px;padding:3px 8px;border-radius:10px">+ Nuevo</span>
+        </div>
+        <div style="text-align:center;padding:8px">
+          <div style="font-size:24px">💳</div>
+          <div style="font-size:10px;font-weight:600;color:#888;letter-spacing:.05em;margin-top:2px">SIN PERFILES DE PAGO</div>
+        </div>
+        <!-- Pro card inmediata -->
+        <div style="background:#fde8e4;margin:0 8px;border-radius:10px;padding:12px">
+          <div style="font-size:12px;font-weight:700">TasaVe Pro</div>
+          <div style="font-size:16px;color:var(--red);font-weight:700">$1.99 <span style="font-size:10px;font-weight:400;color:#888">/ mes</span></div>
+          <div style="font-size:9px;color:#555;margin:4px 0">✓ Sin anuncios ✓ Widget ✓ Historial 1 año ✓ CSV</div>
+          <div style="background:var(--red);color:#fff;text-align:center;border-radius:8px;padding:6px;font-size:10px;font-weight:600;margin-top:8px">Suscribirme a Pro</div>
+        </div>
+      </div>
+      <div class="annotations">
+        <div class="annotation bad"><span class="ann-icon">🚧</span><div class="ann-text"><strong>Muro de pago inmediato</strong>El usuario nuevo ve el bloqueo Pro antes de probar nada.</div></div>
+        <div class="annotation bad"><span class="ann-icon">😕</span><div class="ann-text"><strong>Estado vacío sin guía</strong>No le dice al usuario qué es un perfil de pago ni por qué lo necesita.</div></div>
+      </div>
+    </div>
+
+    <div class="compare-arrow">→</div>
+
+    <div class="phone-wrap">
+      <span class="phone-label label-after">DESPUÉS — 1 perfil gratis + upsell inteligente</span>
+      <div class="phone after">
+        <div class="ph-header dark">
+          <span class="ph-app-name serif" style="font-size:16px">Mi Perfil</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;padding:10px;background:#fff;border-bottom:1px solid #eee;font-size:9px">
+          <span style="font-size:16px">▣</span>
+          <div><div style="font-weight:600;font-size:10px">Mi QR de Pago Móvil</div><div style="color:#888;font-size:8px">Banesco · V-12345678 · 0424-1234567</div></div>
+          <span style="margin-left:auto;background:#eaf3de;color:var(--green);font-size:7px;padding:2px 6px;border-radius:8px">Activo</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px">
+          <span style="font-size:11px;font-weight:600">Perfiles de pago</span>
+          <span style="background:#1a1a18;color:#fff;font-size:9px;padding:3px 8px;border-radius:10px">+ Nuevo</span>
+        </div>
+        <div style="background:#f5f2ee;margin:0 8px;border-radius:10px;padding:10px;display:flex;align-items:center;gap:8px">
+          <span style="font-size:18px">🏦</span>
+          <div>
+            <div style="font-size:10px;font-weight:600">Banesco (0134)</div>
+            <div style="font-size:8px;color:#888">V-12345678 · 0424-1234567</div>
+          </div>
+          <div style="margin-left:auto;display:flex;gap:4px">
+            <span style="font-size:14px;cursor:pointer">📋</span>
+            <span style="font-size:14px;cursor:pointer">✏️</span>
+          </div>
+        </div>
+        <!-- Upsell DESPUÉS de ver valor -->
+        <div style="margin:6px 8px;background:#f9f9f9;border-radius:8px;padding:8px;border:1px solid #eee">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div style="font-size:9px;color:#888">Plan Gratuito · 1/1 perfiles</div>
+            <span style="background:var(--red);color:#fff;font-size:8px;padding:2px 8px;border-radius:10px">Ver Pro</span>
+          </div>
+          <div style="background:#eee;border-radius:4px;height:4px;margin-top:6px"><div style="background:var(--red);border-radius:4px;height:4px;width:100%"></div></div>
+          <div style="font-size:8px;color:var(--red);margin-top:3px">Límite alcanzado · Pro desbloquea perfiles ilimitados</div>
+        </div>
+        <div class="ph-nav">
+          <div class="ph-nav-item">🏠<br>Inicio</div>
+          <div class="ph-nav-item">📷<br>Escanear</div>
+          <div class="ph-nav-item">📈<br>Historial</div>
+          <div class="ph-nav-item act">👤<br>Perfil</div>
+        </div>
+      </div>
+      <div class="annotations">
+        <div class="annotation good"><span class="ann-icon">🎁</span><div class="ann-text"><strong>1 perfil gratis incluido</strong>El usuario crea su perfil antes de ver el upsell. Ya hay valor.</div></div>
+        <div class="annotation good"><span class="ann-icon">📊</span><div class="ann-text"><strong>Progress bar de límite</strong>Muestra el límite de forma visual, no con un muro de pago abrupto.</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- MONETIZACIÓN -->
+<section class="section" id="monetizacion">
+  <div class="section-label">05 · Modelo de negocio</div>
+  <h2 class="section-title">Estrategia de monetización</h2>
+  <p class="section-desc">Dos fuentes de ingreso combinadas. Los anuncios deben ser lo suficientemente molestos para que valga la pena pagar Pro, pero no tan molestos que los usuarios desinstalen.</p>
+
+  <div class="mono-grid" style="margin-bottom:1.5rem">
+    <div class="mono-card">
+      <div class="mono-title">Plan Gratuito</div>
+      <div class="mono-price">$0 <span>siempre</span></div>
+      <div class="mono-feature"><span class="feat-check">✓</span> Tasa BCV en tiempo real</div>
+      <div class="mono-feature"><span class="feat-check">✓</span> Convertidor USD ↔ Bs</div>
+      <div class="mono-feature"><span class="feat-check">✓</span> Historial 7 días</div>
+      <div class="mono-feature"><span class="feat-check">✓</span> 1 perfil de pago</div>
+      <div class="mono-feature"><span class="feat-check">✓</span> 3 escaneos de facturas/día</div>
+      <div class="mono-feature"><span class="feat-check">✓</span> 1 alerta personalizada</div>
+      <div class="mono-feature"><span class="feat-x">✗</span> Banner ad en inicio (sutil)</div>
+      <div class="mono-feature"><span class="feat-x">✗</span> Interstitial ad semanal</div>
+    </div>
+    <div class="mono-card featured">
+      <div style="background:var(--green-light);color:var(--green);font-size:10px;font-weight:600;padding:3px 10px;border-radius:10px;display:inline-block;margin-bottom:8px">⭐ RECOMENDADO</div>
+      <div class="mono-title">TasaVe Pro</div>
+      <div class="mono-price">$1.99 <span>/ mes</span></div>
+      <div class="mono-feature"><span class="feat-check">✓</span> Todo del plan gratuito</div>
+      <div class="mono-feature"><span class="feat-check">✓</span> Sin anuncios</div>
+      <div class="mono-feature"><span class="feat-check">✓</span> Historial 1 año + exportar CSV</div>
+      <div class="mono-feature"><span class="feat-check">✓</span> Perfiles de pago ilimitados</div>
+      <div class="mono-feature"><span class="feat-check">✓</span> Escaneos ilimitados</div>
+      <div class="mono-feature"><span class="feat-check">✓</span> Alertas ilimitadas</div>
+      <div class="mono-feature"><span class="feat-check">✓</span> Widget pantalla de inicio</div>
+      <div class="mono-feature"><span class="feat-check">✓</span> EUR, COP, BRL incluidos</div>
+    </div>
+  </div>
+
+  <div style="background:var(--white);border-radius:12px;padding:16px;border:1px solid var(--border)">
+    <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--ink3);letter-spacing:.1em;margin-bottom:8px;text-transform:uppercase">Estrategia de anuncios — dónde y cómo</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px">
+      <div style="background:#f5f2ee;border-radius:8px;padding:10px">
+        <div style="font-size:11px;font-weight:600;margin-bottom:4px">Banner inicio</div>
+        <div style="font-size:11px;color:var(--ink2)">320×50px al fondo de la pantalla. Solo cuando la tasa ya está visible arriba. Nunca en la calculadora.</div>
+      </div>
+      <div style="background:#f5f2ee;border-radius:8px;padding:10px">
+        <div style="font-size:11px;font-weight:600;margin-bottom:4px">Interstitial semanal</div>
+        <div style="font-size:11px;color:var(--ink2)">1 anuncio de pantalla completa por semana, solo al abrir la app (no mid-sesión). Con botón cerrar en 5s.</div>
+      </div>
+      <div style="background:#f5f2ee;border-radius:8px;padding:10px">
+        <div style="font-size:11px;font-weight:600;margin-bottom:4px">Rewarded opt-in</div>
+        <div style="font-size:11px;color:var(--ink2)">El usuario puede ver un video de 30s para ganar 5 escaneos extra. Voluntario, alta conversión.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- WINDSURF GUIDE -->
+<section class="section" id="windsurf">
+  <div class="section-label">06 · Instrucciones para Windsurf + Claude Opus</div>
+  <h2 class="section-title">Guía de implementación técnica</h2>
+  <p class="section-desc">Instrucciones precisas para que el agente de Windsurf sepa exactamente qué cambiar, en qué orden, y por qué.</p>
+
+  <div class="instruction-block">
+    <div class="inst-tag">TAREA 1 — Tipografía (prioridad máxima)</div>
+    <div class="inst-title">Agregar fuente Playfair Display y aplicar en valores monetarios</div>
+    <div class="inst-desc">
+      1. Descarga Playfair Display de Google Fonts y agrégala a <code>assets/fonts/</code><br>
+      2. Declárala en <code>pubspec.yaml</code> como familia <code>PlayfairDisplay</code><br>
+      3. Crea una constante de estilo: <code>kMoneyTextStyle</code> con Playfair Display, fontSize 48, fontWeight 400, letterSpacing 0.5<br>
+      4. Aplica <code>kMoneyTextStyle</code> SOLO a: el valor de tasa BCV principal, el monto en USD, el monto en Bs<br>
+      5. Todos los demás textos (etiquetas, botones, navbar) mantienen la fuente actual<br>
+      6. Verifica que el estilo funcione en modo oscuro (el color debe ser blanco sobre rojo en la calculadora)
+    </div>
+  </div>
+
+  <div class="instruction-block">
+    <div class="inst-tag">TAREA 2 — Pantalla Inicio</div>
+    <div class="inst-title">Reestructurar jerarquía visual y eliminar CTA agresivo</div>
+    <div class="inst-desc">
+      1. En el <code>AppBar</code>: agrega ícono de campana (bell) que navega a la pantalla de Alertas<br>
+      2. Debajo del AppBar agrega un <code>Text</code> pequeño con el tiempo desde la última actualización: <code>"hace X min"</code> con fondo semitransparente<br>
+      3. En la calculadora: agrega una etiqueta <code>"BOLÍVARES"</code> en mayúsculas pequeñas sobre el monto en Bs<br>
+      4. Agrega botón de copiar (ícono clipboard) al lado derecho del monto en Bs. Al presionar: copia al clipboard y muestra SnackBar "Copiado"<br>
+      5. Elimina el widget <code>"Hazte Premium para eliminar publicidad"</code> de la pantalla de inicio<br>
+      6. Reemplázalo por un <code>Text</code> pequeño al fondo: <code>"Plan gratuito · Ver TasaVe Pro →"</code> con color gris claro<br>
+      7. El banner de publicidad (AdMob) va AL FONDO de la pantalla, después de todos los elementos, con padding mínimo
+    </div>
+  </div>
+
+  <div class="instruction-block">
+    <div class="inst-tag">TAREA 3 — Pantalla Perfil</div>
+    <div class="inst-title">Permitir 1 perfil de pago gratis + upsell con progress bar</div>
+    <div class="inst-desc">
+      1. Cambia la lógica actual: el límite gratuito es <code>maxFreeProfiles = 1</code> (actualmente es 0)<br>
+      2. El estado vacío <code>"SIN PERFILES DE PAGO"</code> debe mostrar un botón <code>"Crear mi primer perfil"</code> sin mención de Pro<br>
+      3. Cuando el usuario ya tiene 1 perfil Y no es Pro, muestra una barra de progreso: <code>LinearProgressIndicator(value: 1.0)</code> con label "1/1 perfiles"<br>
+      4. Bajo la barra: texto pequeño en rojo <code>"Límite alcanzado · Pro desbloquea perfiles ilimitados"</code> con botón <code>"Ver Pro"</code> pequeño<br>
+      5. Al presionar "+ Nuevo" con 1 perfil y plan gratis: muestra un BottomSheet explicando los beneficios Pro (NO un AlertDialog abrupto)
+    </div>
+  </div>
+
+  <div class="instruction-block">
+    <div class="inst-tag">TAREA 4 — Navegación</div>
+    <div class="inst-title">Agregar alertas a navbar y mejorar navegación</div>
+    <div class="inst-desc">
+      1. Agrega el ícono de campana directamente en el <code>AppBar</code> de la pantalla Inicio (actions[])<br>
+      2. Si hay alertas recientes (últimas 24h), muestra un Badge rojo encima del ícono campana<br>
+      3. En el BottomNavigationBar, el tab "Perfil" muestra un badge <code>"PRO"</code> pequeño si el usuario NO es pro (incentivo a explorar)<br>
+      4. Asegúrate de que el tab activo usa el color rojo <code>#E8452A</code> con fondo <code>#FFF3F0</code>
+    </div>
+  </div>
+
+  <div class="instruction-block">
+    <div class="inst-tag">TAREA 5 — Modo oscuro</div>
+    <div class="inst-title">Corregir inconsistencias en modo oscuro</div>
+    <div class="inst-desc">
+      1. Busca todos los widgets con <code>color: Colors.white</code> o <code>backgroundColor: Colors.white</code> hardcodeados<br>
+      2. Reemplaza con <code>Theme.of(context).colorScheme.surface</code> o <code>Theme.of(context).colorScheme.onSurface</code><br>
+      3. Los cards de "otras monedas" (EUR, P2P) deben usar <code>Theme.of(context).colorScheme.surfaceVariant</code> como fondo<br>
+      4. El texto de porcentaje P2P (+38.2%) debe ser verde en ambos modos: <code>Color(0xFF2D6A4F)</code><br>
+      5. Prueba activando modo oscuro en Ajustes y revisa visualmente cada pantalla
+    </div>
+  </div>
+
+  <div class="code-block">
+    <pre><span class="code-comment">// ORDEN DE IMPLEMENTACIÓN RECOMENDADO PARA WINDSURF:</span>
+
+<span class="code-val">1.</span> <span class="code-key">Tipografía</span>  → cambio visual más impactante, bajo riesgo técnico
+<span class="code-val">2.</span> <span class="code-key">Inicio</span>      → eliminar CTA agresivo, agregar campana
+<span class="code-val">3.</span> <span class="code-key">Perfil</span>      → permitir 1 perfil gratis
+<span class="code-val">4.</span> <span class="code-key">Navegación</span> → badge alertas
+<span class="code-val">5.</span> <span class="code-key">Modo oscuro</span> → corrección de colores
+
+<span class="code-comment">// NO tocar en esta iteración:</span>
+<span class="code-comment">// - Lógica de suscripción Play Console (ya tiene bugs)</span>
+<span class="code-comment">// - Escáner de facturas (funciona, mejoras en v1.2)</span>
+<span class="code-comment">// - Historial (funciona bien)</span></pre>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ROADMAP -->
+<section class="section" id="roadmap">
+  <div class="section-label">07 · Hoja de ruta</div>
+  <h2 class="section-title">Releases para superar a AlCambio</h2>
+  <p class="section-desc">Cada versión tiene un objetivo claro de retención o conversión.</p>
+
+  <div class="roadmap">
+    <div class="rm-phase" data-num="1">
+      <div class="rm-title">v1.1 — Visual Fix</div>
+      <div class="rm-sub">Objetivo: primera impresión premium</div>
+      <div class="rm-item"><div class="rm-dot"></div>Tipografía serif en números</div>
+      <div class="rm-item"><div class="rm-dot"></div>Eliminar CTA Pro de inicio</div>
+      <div class="rm-item"><div class="rm-dot"></div>Campana de alertas en navbar</div>
+      <div class="rm-item"><div class="rm-dot"></div>1 perfil de pago gratis</div>
+      <div class="rm-item"><div class="rm-dot"></div>Botón copiar en tasa</div>
+    </div>
+    <div class="rm-phase" data-num="2">
+      <div class="rm-title">v1.2 — Features</div>
+      <div class="rm-sub">Objetivo: retención 7 días</div>
+      <div class="rm-item"><div class="rm-dot"></div>Widget pantalla de inicio</div>
+      <div class="rm-item"><div class="rm-dot"></div>Compartir tasa como imagen</div>
+      <div class="rm-item"><div class="rm-dot"></div>Onboarding escáner (3 pasos)</div>
+      <div class="rm-item"><div class="rm-dot"></div>Tooltip interactivo en historial</div>
+      <div class="rm-item"><div class="rm-dot"></div>Notificación push diaria</div>
+    </div>
+    <div class="rm-phase" data-num="3">
+      <div class="rm-title">v1.3 — Growth</div>
+      <div class="rm-sub">Objetivo: 1000 reseñas Play Store</div>
+      <div class="rm-item"><div class="rm-dot"></div>Solicitar reseña tras 5 usos</div>
+      <div class="rm-item"><div class="rm-dot"></div>Rewarded ads opt-in</div>
+      <div class="rm-item"><div class="rm-dot"></div>Referidos (comparte y gana)</div>
+      <div class="rm-item"><div class="rm-dot"></div>COP y BRL en gratis (viral)</div>
+      <div class="rm-item"><div class="rm-dot"></div>Modo oscuro pulido</div>
+    </div>
+  </div>
+</section>
+
+<!-- SUMMARY -->
+<div class="summary-box">
+  <div class="sum-title">Resumen ejecutivo</div>
+  <div class="sum-grid">
+    <div>
+      <div class="sum-num">5</div>
+      <div class="sum-label">cambios críticos en v1.1</div>
+    </div>
+    <div>
+      <div class="sum-num">$1.99</div>
+      <div class="sum-label">precio mensual Pro</div>
+    </div>
+    <div>
+      <div class="sum-num">3</div>
+      <div class="sum-label">versiones para superar AlCambio</div>
+    </div>
+  </div>
+  <div style="margin-top:1.5rem;font-size:13px;color:rgba(255,255,255,.5);line-height:1.8;border-top:1px solid rgba(255,255,255,.1);padding-top:1rem">
+    <strong style="color:rgba(255,255,255,.8)">Ventaja diferencial de TasaVe sobre AlCambio:</strong> escáner de facturas + perfiles de pago móvil con QR. Ningún competidor tiene ambas funciones. La v1.1 debe dejar la UI al nivel de AlCambio para que estas funciones puedan brillar.
+  </div>
+</div>
+
+</main>
+
+<footer style="text-align:center;padding:2rem;font-size:12px;color:var(--ink3);border-top:1px solid var(--border);margin-top:2rem">
+  Guía de diseño TasaVe · Generada para implementación con Windsurf + Claude Opus · Mayo 2026
+</footer>
+
+</body>
+</html>

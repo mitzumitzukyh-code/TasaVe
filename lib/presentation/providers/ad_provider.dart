@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
@@ -10,22 +11,33 @@ final adInitProvider = FutureProvider<bool>((ref) async {
   return true;
 });
 
-final bannerAdProvider = Provider<BannerAd?>((ref) {
+final bannerAdProvider = FutureProvider<BannerAd?>((ref) async {
   final userPlan = ref.watch(userPlanProvider);
   if (userPlan == 'premium' || kIsWeb) return null;
 
+  // Esperar a que MobileAds.instance.initialize() termine
+  final initialized = await ref.watch(adInitProvider.future);
+  if (!initialized) return null;
+
+  final completer = Completer<BannerAd?>();
+
   final ad = BannerAd(
-    adUnitId: AdConfig.BANNER_HOME,
+    adUnitId: AdConfig.BANNER_HOME_2,
     size: AdSize.banner,
     request: const AdRequest(),
     listener: BannerAdListener(
+      onAdLoaded: (ad) => completer.complete(ad as BannerAd),
       onAdFailedToLoad: (ad, error) {
         ad.dispose();
+        completer.complete(null);
       },
     ),
   );
   ad.load();
-  return ad;
+
+  ref.onDispose(() => ad.dispose());
+
+  return completer.future;
 });
 
 class InterstitialAdService {
@@ -68,5 +80,9 @@ final interstitialAdProvider = Provider<InterstitialAdService>((ref) {
   if (userPlan != 'premium' && !kIsWeb) {
     service.loadAd();
   }
+
+  // Liberar el intersticial cuando el provider sea destruido
+  ref.onDispose(() => service.dispose());
+
   return service;
 });

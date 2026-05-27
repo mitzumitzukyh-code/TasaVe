@@ -8,7 +8,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="description" content="Consulta la tasa BCV del d&#243;lar y euro en tiempo real. Calculadora de divisas y historial para Venezuela.">
   <meta name="keywords" content="tasa BCV, d&#243;lar Venezuela, euro BCV, calculadora bolivares, USDT P2P, TasaVe, dolar hoy venezuela, tasa paralelo">
-  <meta name="theme-color" content="#006847">
+  <meta name="theme-color" content="#E53935">
   <meta name="robots" content="index, follow">
   <meta name="author" content="TasaVe">
 
@@ -100,5 +100,75 @@
     </div>
   </noscript>
   <script src="flutter_bootstrap.js" async></script>
+
+  <!-- Web Push: registrar Service Worker y suscribirse -->
+  <script>
+  if ('serviceWorker' in navigator && 'PushManager' in window) {
+    window.addEventListener('load', async () => {
+      try {
+        const reg = await navigator.serviceWorker.register('/push-sw.js');
+        console.log('Push SW registrado:', reg.scope);
+
+        // Exponer funciones para que Flutter las llame via JS interop
+        window.tasavePush = {
+          async subscribe() {
+            const permission = await Notification.requestPermission();
+            if (permission !== 'granted') return null;
+
+            // Obtener VAPID public key del backend
+            const res = await fetch('https://tasave-api.workers.dev/push/vapid-key');
+            const { publicKey } = await res.json();
+            const vapidKey = urlBase64ToUint8Array(publicKey);
+
+            const subscription = await reg.pushManager.subscribe({
+              userVisibleOnly: true,
+              applicationServerKey: vapidKey,
+            });
+
+            // Enviar suscripción al backend
+            await fetch('https://tasave-api.workers.dev/push/subscribe', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                subscription: subscription.toJSON(),
+                alerts: [{ type: 'daily_rate', enabled: true }],
+              }),
+            });
+
+            return 'subscribed';
+          },
+
+          async unsubscribe() {
+            const subscription = await reg.pushManager.getSubscription();
+            if (!subscription) return;
+            await fetch('https://tasave-api.workers.dev/push/unsubscribe', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ endpoint: subscription.endpoint }),
+            });
+            await subscription.unsubscribe();
+            return 'unsubscribed';
+          },
+
+          async isSubscribed() {
+            const subscription = await reg.pushManager.getSubscription();
+            return !!subscription;
+          },
+        };
+      } catch (err) {
+        console.warn('Push SW error:', err);
+      }
+    });
+  }
+
+  function urlBase64ToUint8Array(base64String) {
+    const padding = '='.repeat((4 - base64String.length % 4) % 4);
+    const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+    const rawData = atob(base64);
+    const outputArray = new Uint8Array(rawData.length);
+    for (let i = 0; i < rawData.length; ++i) outputArray[i] = rawData.charCodeAt(i);
+    return outputArray;
+  }
+  </script>
 </body>
 </html>

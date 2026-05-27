@@ -1,125 +1,71 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../core/constants.dart';
-import '../providers/accessibility_provider.dart';
 import '../providers/shell_provider.dart';
+import '../providers/subscription_provider.dart';
 import 'home_screen.dart';
-import 'calculator_screen.dart';
 import 'history_screen.dart';
-import 'remesas_screen.dart';
-import 'alerts_screen.dart';
+import 'scanner_screen.dart';
 import 'perfiles_screen.dart';
 
-class ShellScreen extends ConsumerStatefulWidget {
+class ShellScreen extends ConsumerWidget {
   const ShellScreen({super.key});
 
-  @override
-  ConsumerState<ShellScreen> createState() => _ShellScreenState();
-}
-
-class _ShellScreenState extends ConsumerState<ShellScreen> {
-  InterstitialAd? _interstitialAd;
-  int _navCount = 0;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadInterstitial();
-  }
-
-  void _loadInterstitial() {
-    if (kIsWeb) return;
-    InterstitialAd.load(
-      adUnitId: AdConfig.INTERSTITIAL,
-      request: const AdRequest(),
-      adLoadCallback: InterstitialAdLoadCallback(
-        onAdLoaded: (ad) {
-          _interstitialAd = ad;
-          ad.fullScreenContentCallback = FullScreenContentCallback(
-            onAdDismissedFullScreenContent: (ad) {
-              ad.dispose();
-              _loadInterstitial();
-            },
-            onAdFailedToShowFullScreenContent: (ad, error) {
-              ad.dispose();
-              _loadInterstitial();
-            },
-          );
-        },
-        onAdFailedToLoad: (error) {
-          _interstitialAd = null;
-        },
-      ),
-    );
-  }
-
-  void _showInterstitialIfNeeded() {
-    final userPlan = ref.read(userPlanProvider);
-    if (userPlan == 'premium' || kIsWeb) return;
-    _navCount++;
-    if (_navCount % 3 == 0 && _interstitialAd != null) {
-      _interstitialAd!.show();
-      _interstitialAd = null;
-    }
-  }
-
-  @override
-  void dispose() {
-    _interstitialAd?.dispose();
-    super.dispose();
-  }
-
-  final _screens = const [
-    HomeScreen(),
-    CalculatorScreen(),
-    HistoryScreen(),
-    RemesasScreen(),
-    PerfilesScreen(),
-    AlertsScreen(),
+  static const _tabs = [
+    _TabDef(label: 'Inicio', icon: Icons.home_outlined, activeIcon: Icons.home_rounded, semantics: 'Inicio'),
+    _TabDef(label: 'Escanear', icon: Icons.document_scanner_outlined, activeIcon: Icons.document_scanner_rounded, semantics: 'Escáner de facturas'),
+    _TabDef(label: 'Historial', icon: Icons.show_chart_outlined, activeIcon: Icons.show_chart_rounded, semantics: 'Historial de tasas'),
+    _TabDef(label: 'Perfil', icon: Icons.person_outline_rounded, activeIcon: Icons.person_rounded, semantics: 'Perfil y QR de pago'),
   ];
 
-  void _goTo(int index) {
-    ref.read(shellTabProvider.notifier).state = index;
-  }
-
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final currentIndex = ref.watch(shellTabProvider);
+    final isPremium = ref.watch(isPremiumProvider);
+
+    const screens = [
+      HomeScreen(),
+      ScannerScreen(),
+      HistoryScreen(),
+      PerfilesScreen(),
+    ];
 
     return Scaffold(
       body: IndexedStack(
         index: currentIndex,
-        children: _screens,
+        children: screens,
       ),
       bottomNavigationBar: Container(
-        decoration: const BoxDecoration(
-          color: AppColors.bg,
-          border: Border(top: BorderSide(color: AppColors.border)),
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surface,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.08),
+              blurRadius: 12,
+              offset: const Offset(0, -4),
+            ),
+          ],
         ),
         child: SafeArea(
           child: Padding(
-            padding: const EdgeInsets.only(top: 6, bottom: 14),
+            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                _NavItem(label: 'INICIO', isActive: currentIndex == 0,
-                  onTap: () => _goTo(0)),
-                _NavItem(label: 'CALCULAR', isActive: currentIndex == 1,
-                  onTap: () => _goTo(1)),
-                _NavItem(label: 'HIST', isActive: currentIndex == 2,
-                  onTap: () {
-                    if (currentIndex != 2) _showInterstitialIfNeeded();
-                    _goTo(2);
-                  }),
-                _NavItem(label: 'REMESAS', isActive: currentIndex == 3,
-                  onTap: () => _goTo(3)),
-                _NavItem(label: 'PERFILES', isActive: currentIndex == 4,
-                  onTap: () => _goTo(4)),
-                _NavItem(label: 'ALERTAS', isActive: currentIndex == 5,
-                  onTap: () => _goTo(5)),
-              ],
+              children: List.generate(_tabs.length, (i) {
+                final tab = _tabs[i];
+                // Badge PRO en tab Perfil (índice 3) para usuarios free
+                final badge = (!isPremium && i == 3) ? 'PRO' : null;
+                return _NavItem(
+                  label: tab.label,
+                  icon: tab.icon,
+                  activeIcon: tab.activeIcon,
+                  semanticsLabel: tab.semantics,
+                  isActive: currentIndex == i,
+                  badgeLabel: badge,
+                  onTap: () => ref.read(shellTabProvider.notifier).state = i,
+                );
+              }),
             ),
           ),
         ),
@@ -128,47 +74,105 @@ class _ShellScreenState extends ConsumerState<ShellScreen> {
   }
 }
 
+class _TabDef {
+  final String label;
+  final IconData icon;
+  final IconData activeIcon;
+  final String semantics;
+  const _TabDef({
+    required this.label,
+    required this.icon,
+    required this.activeIcon,
+    required this.semantics,
+  });
+}
+
 class _NavItem extends StatelessWidget {
   final String label;
+  final IconData icon;
+  final IconData activeIcon;
+  final String semanticsLabel;
   final bool isActive;
   final VoidCallback onTap;
+  final String? badgeLabel;
 
   const _NavItem({
     required this.label,
+    required this.icon,
+    required this.activeIcon,
+    required this.semanticsLabel,
     required this.isActive,
     required this.onTap,
+    this.badgeLabel,
   });
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      behavior: HitTestBehavior.opaque,
-      child: SizedBox(
-        width: 60,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Green bar indicator
-            Container(
-              width: 16, height: 2,
-              margin: const EdgeInsets.only(bottom: 5),
-              decoration: BoxDecoration(
-                color: isActive ? AppColors.green : Colors.transparent,
-                borderRadius: BorderRadius.circular(1),
+    final width = (MediaQuery.of(context).size.width - 16) / 4;
+
+    return Semantics(
+      button: true,
+      selected: isActive,
+      label: semanticsLabel,
+      child: GestureDetector(
+        onTap: onTap,
+        behavior: HitTestBehavior.opaque,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          width: width,
+          padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 2),
+          decoration: BoxDecoration(
+            color: isActive ? AppColors.primary : Colors.transparent,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  Icon(
+                    isActive ? activeIcon : icon,
+                    size: 22,
+                    color: isActive ? Colors.white : AppColors.text3,
+                  ),
+                  if (badgeLabel != null)
+                    Positioned(
+                      top: -4,
+                      right: -10,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                        decoration: BoxDecoration(
+                          color: AppColors.primary,
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(color: Colors.white, width: 1),
+                        ),
+                        child: Text(
+                          badgeLabel!,
+                          style: GoogleFonts.dmSans(
+                            fontSize: 6,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
               ),
-            ),
-            Text(
-              label,
-              style: TextStyle(
-                fontFamily: 'monospace',
-                fontSize: 7,
-                letterSpacing: 0.5,
-                color: isActive ? AppColors.green : AppColors.text3,
-                fontWeight: isActive ? FontWeight.w700 : FontWeight.w400,
+              const SizedBox(height: 3),
+              Text(
+                label,
+                style: GoogleFonts.dmSans(
+                  fontSize: 9,
+                  color: isActive ? Colors.white : AppColors.text3,
+                  fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

@@ -1,72 +1,65 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
+// Estilo tipográfico para valores monetarios — DM Sans
+final TextStyle kMoneyTextStyle = GoogleFonts.dmSans(
+  fontSize: 26,
+  fontWeight: FontWeight.w600,
+  letterSpacing: 0,
+);
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PALETA DE COLORES TASAVE — Sistema actual (Material3)
+// Migrado a temas light/dark con AppTheme.light + AppTheme.dark
+//
+// Primary:       #E53935  — Rojo TasaVe, igual en ambos temas
+// Background:    Light #F2F2F2  / Dark #0C0C0E  (via scaffoldBackgroundColor)
+// Surface:       Light #FFFFFF  / Dark #16161A  (via colorScheme.surface)
+// On-surface:    Material3 auto-genera según tema
+// Success/Green: #1B5E20  (light) — texto sobre fondo claro
+// Warning/Amber: #FFD100  — advertencias y destacados
+// Error/Red:     #E53935  — mismo que primary
+// ─────────────────────────────────────────────────────────────────────────────
 class AppColors {
   AppColors._();
 
-  // ── Fondos (V3.1 FINAL) ──
-  static const Color bg = Color(0xFF07070A);
-  static const Color s1 = Color(0xFF0D0D11);
-  static const Color s2 = Color(0xFF141418);
-  static const Color s3 = Color(0xFF1B1B20);
-  static const Color s4 = Color(0xFF222228);
-  static const Color surface = s3;
+  // ── Fondos (Light UI) ──
+  static const Color bg = Color(0xFFF2F2F2);
+  static const Color surface = Color(0xFFFFFFFF);
+  static const Color card = Color(0xFFFFFFFF);
+
+  // ── Color Primario (TasaVe Rojo) ──
+  static const Color primary = Color(0xFFE53935);
 
   // ── Bordes ──
-  static const Color border = Color(0xFF28282F);
-  static const Color border2 = Color(0xFF36363F);
+  static const Color border = Color(0xFFE0E0E0);
+  static const Color border2 = Color(0xFFBDBDBD);
 
   // ── Texto ──
-  static const Color text = Color(0xFFEEEEF5);
-  static const Color text2 = Color(0xFF8888A0);
-  static const Color text3 = Color(0xFF444455);
-  static const Color text4 = Color(0xFF22222A);
+  static const Color text = Color(0xFF1A1A1A);
+  static const Color text2 = Color(0xFF757575);
+  static const Color text3 = Color(0xFF9E9E9E);
 
-  // ── Green (Verde venezolano del ícono) ──
-  static const Color green = Color(0xFF00A86B);
-  static const Color green2 = Color(0xFF007A4D);
-  static const Color greenDim = Color(0x1A00A86B);   // rgba(0,168,107,.1)
-  static const Color greenDim2 = Color(0x2E00A86B);  // rgba(0,168,107,.18)
+  // ── Green (saldos/positivo) ──
+  static const Color green = Color(0xFF1B5E20);
+  static const Color greenLight = Color(0xFFE8F5E9);
 
-  // ── Gold (Dorado de la bandera venezolana) ──
-  static const Color amber = Color(0xFFCF9B2E);
-  static const Color amberDim = Color(0x1ACF9B2E);   // rgba(207,155,46,.1)
-  static const Color amberDim2 = Color(0x33CF9B2E);  // rgba(207,155,46,.2)
+  // ── Red (alertas/negativo) ──
+  static const Color red = Color(0xFFE53935);
+  static const Color redLight = Color(0xFFFFEBEE);
 
-  // ── Red (Rojo venezolano) ──
-  static const Color red = Color(0xFFCF142B);
-  static const Color redDim = Color(0x1ACF142B);
+  // ── Yellow (advertencias/destacados) ──
+  static const Color yellow = Color(0xFFFFD100);
+  static const Color yellowLight = Color(0xFFFFF9C4);
 
-  // ── Blue ──
-  static const Color blue = Color(0xFF40C4FF);
-  static const Color blueDim = Color(0x1A40C4FF);
+  // ── WhatsApp ──
+  static const Color whatsappGreen = Color(0xFF25D366);
 
-  // ── Purple ──
-  static const Color purple = Color(0xFFCE93D8);
-  static const Color purpleDim = Color(0x1ACE93D8);
-
-  // ── Legado (compatibilidad) ──
-  static const Color bg2 = s1;
-  static const Color bg3 = s2;
-  static const Color bg4 = s3;
-  static const Color primary = green;
-  static const Color secondary = Color(0xFFCF142B);
-  static const Color accent = amber;
-  static const Color bgLight = Color(0xFFF8F9FA);
-  static const Color bgDark = bg;
-  static const Color textMain = text;
-  static const Color textMuted = text2;
-  static const Color success = green;
-  static const Color danger = red;
-  static const Color cardBg = s2;
-  static const Color whatsappGreen = Color(0xFF12C55D);
-
-  // ── Radios ──
+  // ── Radios de borde ──
   static const double r1 = 10.0;
   static const double r2 = 16.0;
   static const double r3 = 22.0;
   static const double r4 = 28.0;
-  static const double radius = r3;
-  static const double radiusSm = r1;
 }
 
 class AppStrings {
@@ -106,5 +99,6 @@ class AdConfig {
 
   static const String APP_ID_ANDROID = 'ca-app-pub-8194792499117380~1133581866';
   static const String BANNER_HOME = 'ca-app-pub-8194792499117380/1681210925';
+  static const String BANNER_HOME_2 = 'ca-app-pub-8194792499117380/6185746162';
   static const String INTERSTITIAL = 'ca-app-pub-8194792499117380/9143704910';
 }

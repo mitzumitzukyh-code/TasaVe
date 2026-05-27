@@ -23,50 +23,46 @@ class _AlertsScreenState extends ConsumerState<AlertsScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.bg,
-      body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.only(bottom: 20),
-          children: [
-            // ── Header with PREMIUM badge ──
-            Padding(
-              padding: const EdgeInsets.fromLTRB(18, 6, 18, 8),
-              child: Row(
-                children: [
-                  RichText(
-                    text: TextSpan(
-                      style: GoogleFonts.bebasNeue(fontSize: 24, letterSpacing: 2),
-                      children: const [
-                        TextSpan(text: 'TASA', style: TextStyle(color: AppColors.text)),
-                        TextSpan(text: 'VE', style: TextStyle(color: AppColors.green)),
-                      ],
-                    ),
+      appBar: AppBar(
+        backgroundColor: AppColors.primary,
+        elevation: 0,
+        title: Text(
+          'Alertas',
+          style: GoogleFonts.dmSans(fontSize: 22, fontWeight: FontWeight.w900, color: Colors.white),
+        ),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 16),
+            child: Center(
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: isPremium
+                      ? Colors.white.withValues(alpha: 0.25)
+                      : Colors.white.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(100),
+                ),
+                child: Text(
+                  isPremium ? 'PREMIUM' : 'FREE',
+                  style: GoogleFonts.dmSans(
+                    fontSize: 8, fontWeight: FontWeight.w700,
+                    letterSpacing: 1, color: Colors.white,
                   ),
-                  const Spacer(),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: isPremium ? AppColors.green : AppColors.s4,
-                      borderRadius: BorderRadius.circular(100),
-                    ),
-                    child: Text(
-                      isPremium ? 'PREMIUM ACTIVO' : 'FREE',
-                      style: GoogleFonts.spaceMono(
-                        fontSize: 7, fontWeight: FontWeight.w700,
-                        letterSpacing: 1,
-                        color: isPremium ? const Color(0xFF050505) : AppColors.text3,
-                      ),
-                    ),
-                  ),
-                ],
+                ),
               ),
             ),
-
+          ),
+        ],
+      ),
+      body: ListView(
+        padding: const EdgeInsets.fromLTRB(0, 12, 0, 20),
+        children: [
             // ── Section: Recent Alerts ──
             Padding(
-              padding: const EdgeInsets.fromLTRB(13, 4, 13, 6),
+              padding: const EdgeInsets.fromLTRB(13, 0, 13, 6),
               child: Text(
                 'ALERTAS RECIENTES',
-                style: GoogleFonts.spaceMono(fontSize: 8, letterSpacing: 2, color: AppColors.text3),
+                style: GoogleFonts.dmSans(fontSize: 8, letterSpacing: 2, color: AppColors.text3),
               ),
             ),
 
@@ -77,19 +73,53 @@ class _AlertsScreenState extends ConsumerState<AlertsScreen> {
             ),
             const SizedBox(height: 10),
 
+            // ── Banner explicativo de notificaciones push ──
+            Padding(
+              padding: const EdgeInsets.fromLTRB(13, 0, 13, 10),
+              child: Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.06),
+                  borderRadius: BorderRadius.circular(AppColors.r1),
+                  border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Icon(Icons.notifications_active_outlined, size: 16, color: AppColors.primary),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Las notificaciones push se envían automáticamente desde el servidor cuando la tasa BCV cambia, el spread P2P es inusual o hay máximos históricos. Activa las notificaciones desde Ajustes (⚙️) en la pantalla Inicio.',
+                        style: GoogleFonts.dmSans(fontSize: 11, color: AppColors.primary, height: 1.4),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
             // ── Section: My Active Alerts ──
             Padding(
               padding: const EdgeInsets.fromLTRB(13, 0, 13, 6),
               child: Text(
-                'MIS ALERTAS ACTIVAS',
-                style: GoogleFonts.spaceMono(fontSize: 8, letterSpacing: 2, color: AppColors.text3),
+                'UMBRALES DE SEGUIMIENTO',
+                style: GoogleFonts.dmSans(fontSize: 8, letterSpacing: 2, color: AppColors.text3),
               ),
             ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(13, 0, 13, 4),
+              child: Text(
+                'Configura los valores para recibir notificaciones personalizadas',
+                style: GoogleFonts.dmSans(fontSize: 11, color: AppColors.text2),
+              ),
+            ),
+            const SizedBox(height: 6),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 13),
               child: Container(
                 decoration: BoxDecoration(
-                  color: AppColors.s2,
+                  color: AppColors.surface,
                   borderRadius: BorderRadius.circular(AppColors.r2),
                   border: Border.all(color: AppColors.border),
                 ),
@@ -102,20 +132,20 @@ class _AlertsScreenState extends ConsumerState<AlertsScreen> {
                         final alert = alertsState.alerts[i];
                         final colors = {
                           'bcv_above': AppColors.green,
-                          'ritmo_inusual': AppColors.amber,
-                          'spread_above': AppColors.green,
+                          'ritmo_inusual': AppColors.yellow,
+                          'p2p_above': AppColors.green,
                         };
                         final subtitles = {
-                          'bcv_above': 'Push cuando BCV supere el umbral',
-                          'ritmo_inusual': 'Cambio > ${alert.threshold.toStringAsFixed(1)}%/hora',
-                          'spread_above': 'Diferencia oficial vs paralelo',
+                          'bcv_above': 'Notificación cuando BCV supere este valor',
+                          'ritmo_inusual': 'Alerta si el cambio supera ${alert.threshold.toStringAsFixed(1)}%/hora',
+                          'p2p_above': 'Alerta cuando spread P2P vs BCV supere este %',
                         };
                         final valueTexts = {
                           'bcv_above': alert.threshold > 0
-                              ? alert.threshold.toStringAsFixed(2)
-                              : 'configurar',
+                              ? '${alert.threshold.toStringAsFixed(2)} Bs/\$'
+                              : 'sin umbral',
                           'ritmo_inusual': '${alert.threshold.toStringAsFixed(1)}%/h',
-                          'spread_above': '${alert.threshold.toStringAsFixed(1)}%',
+                          'p2p_above': '${alert.threshold.toStringAsFixed(1)}%',
                         };
                         return _ToggleRow(
                           label: alert.label,
@@ -135,8 +165,15 @@ class _AlertsScreenState extends ConsumerState<AlertsScreen> {
                 ),
               ),
             ),
-          ],
-        ),
+            // ── Nota informativa al pie ──
+            Padding(
+              padding: const EdgeInsets.fromLTRB(13, 8, 13, 0),
+              child: Text(
+                'Toca el valor subrayado para cambiar el umbral. Los cambios se aplican en la próxima verificación del servidor.',
+                style: GoogleFonts.dmSans(fontSize: 10, color: AppColors.text3, height: 1.4),
+              ),
+            ),
+        ],
       ),
     );
   }
@@ -146,11 +183,11 @@ class _AlertsScreenState extends ConsumerState<AlertsScreen> {
       text: alert.threshold > 0 ? alert.threshold.toStringAsFixed(2) : '',
     );
     final suffix = alert.type == 'bcv_above' ? 'Bs/\$' : '%';
-    final hint = alert.type == 'bcv_above' ? 'Ej: 80.00' : 'Ej: 4.0';
+    final hint = alert.type == 'bcv_above' ? 'Ej: 80.00' : alert.type == 'ritmo_inusual' ? 'Ej: 2.0' : 'Ej: 4.0';
 
     showModalBottomSheet(
       context: context,
-      backgroundColor: AppColors.s2,
+      backgroundColor: AppColors.surface,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
@@ -176,19 +213,19 @@ class _AlertsScreenState extends ConsumerState<AlertsScreen> {
             const SizedBox(height: 16),
             Text(
               'CONFIGURAR: ${alert.label.toUpperCase()}',
-              style: GoogleFonts.spaceMono(fontSize: 10, letterSpacing: 2, color: AppColors.text3),
+              style: GoogleFonts.dmSans(fontSize: 10, letterSpacing: 2, color: AppColors.text3),
             ),
             const SizedBox(height: 12),
             TextField(
               controller: controller,
               autofocus: true,
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              style: GoogleFonts.bebasNeue(fontSize: 30, color: AppColors.text),
+              style: GoogleFonts.dmSans(fontSize: 30, color: AppColors.text),
               decoration: InputDecoration(
                 hintText: hint,
-                hintStyle: GoogleFonts.bebasNeue(fontSize: 30, color: AppColors.text3),
+                hintStyle: GoogleFonts.dmSans(fontSize: 30, color: AppColors.text3),
                 suffixText: suffix,
-                suffixStyle: GoogleFonts.spaceMono(fontSize: 12, color: AppColors.text3),
+                suffixStyle: GoogleFonts.dmSans(fontSize: 12, color: AppColors.text3),
                 enabledBorder: UnderlineInputBorder(
                   borderSide: BorderSide(color: AppColors.border),
                 ),
@@ -216,7 +253,7 @@ class _AlertsScreenState extends ConsumerState<AlertsScreen> {
                     Navigator.pop(context);
                   }
                 },
-                child: Text('GUARDAR', style: GoogleFonts.spaceMono(
+                child: Text('GUARDAR', style: GoogleFonts.dmSans(
                   fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 2,
                 )),
               ),
@@ -235,53 +272,34 @@ class _AlertsScreenState extends ConsumerState<AlertsScreen> {
       return const Center(child: CircularProgressIndicator(color: AppColors.green));
     }
 
-    final spread = tasa.spreadPercent;
     final alerts = <Widget>[];
 
-    // Alert 1: Spread analysis (always show if data available)
-    if (tasa.usdtP2P != null && spread.abs() > 0) {
-      final isHigh = spread.abs() > 25;
+    // Alert 1: P2P vs BCV comparison
+    if (tasa.usdtP2P > 0 && tasa.bcvUsd > 0) {
+      final diff = ((tasa.usdtP2P - tasa.bcvUsd) / tasa.bcvUsd * 100);
+      final isHigh = diff.abs() > 25;
       alerts.add(_AlertCard(
         emoji: isHigh ? '⚡' : '📊',
-        title: isHigh ? 'Spread inusual detectado' : 'Spread BCV vs Paralelo',
-        subtitle: 'Diferencia: ${spread > 0 ? "+" : ""}${spread.toStringAsFixed(1)}% · P2P: ${Formatters.formatRate(tasa.usdtP2P!)}',
+        title: isHigh ? 'Diferencia inusual detectada' : 'P2P vs BCV',
+        subtitle: 'Diferencia: ${diff > 0 ? "+" : ""}${diff.toStringAsFixed(1)}% · P2P: ${Formatters.formatRate(tasa.usdtP2P)}',
         time: Formatters.timeAgo(tasa.timestamp),
-        borderColor: isHigh ? AppColors.amber : AppColors.blue,
-        bgColor: isHigh ? AppColors.amberDim : AppColors.blueDim,
+        borderColor: isHigh ? AppColors.yellow : AppColors.border,
+        bgColor: isHigh ? AppColors.yellowLight : AppColors.surface,
       ));
     }
 
-    // Alert 2: BCV status
-    if (tasa.bcvStatus != null) {
-      final isLive = tasa.bcvStatus!.contains('Monitoreando');
-      alerts.add(Padding(
-        padding: const EdgeInsets.only(top: 5),
-        child: _AlertCard(
-          emoji: isLive ? '🔴' : '✓',
-          title: isLive ? 'Monitoreando BCV' : 'Tasa BCV actualizada',
-          subtitle: '${tasa.bcvStatus} · BCV: ${Formatters.formatRate(tasa.bcvUsd)}',
-          time: '${tasa.timestamp.hour}:${tasa.timestamp.minute.toString().padLeft(2, '0')}',
-          borderColor: isLive ? AppColors.amber : AppColors.green,
-          bgColor: isLive ? AppColors.amberDim : AppColors.greenDim,
-        ),
-      ));
-    }
-
-    // Alert 3: Yadio comparison
-    if (tasa.yadioRate != null && tasa.yadioRate! > 0) {
-      final yadioDiff = ((tasa.yadioRate! - tasa.bcvUsd) / tasa.bcvUsd * 100);
-      alerts.add(Padding(
-        padding: const EdgeInsets.only(top: 5),
-        child: _AlertCard(
-          emoji: '🌐',
-          title: 'Yadio vs BCV',
-          subtitle: 'Yadio: ${Formatters.formatRate(tasa.yadioRate!)} · ${yadioDiff > 0 ? "+" : ""}${yadioDiff.toStringAsFixed(1)}% vs oficial',
-          time: 'hoy',
-          borderColor: AppColors.border2,
-          bgColor: AppColors.s2,
-        ),
-      ));
-    }
+    // Alert 2: BCV info
+    alerts.add(Padding(
+      padding: const EdgeInsets.only(top: 5),
+      child: _AlertCard(
+        emoji: '✓',
+        title: 'Tasa BCV actualizada',
+        subtitle: 'BCV: ${Formatters.formatRate(tasa.bcvUsd)} Bs/\$ · ${tasa.timestamp.hour}:${tasa.timestamp.minute.toString().padLeft(2, '0')}',
+        time: Formatters.timeAgo(tasa.timestamp),
+        borderColor: AppColors.green,
+        bgColor: AppColors.greenLight,
+      ),
+    ));
 
     if (alerts.isEmpty) {
       return Text('Sin alertas activas',
@@ -337,7 +355,7 @@ class _AlertCard extends StatelessWidget {
             ),
           ),
           Text(time,
-            style: GoogleFonts.spaceMono(fontSize: 8, color: AppColors.text3)),
+            style: GoogleFonts.dmSans(fontSize: 8, color: AppColors.text3)),
         ],
       ),
     );
@@ -385,7 +403,7 @@ class _ToggleRow extends StatelessWidget {
                         TextSpan(text: '$label '),
                         TextSpan(
                           text: valueText,
-                          style: GoogleFonts.spaceMono(
+                          style: GoogleFonts.dmSans(
                             fontSize: 11,
                             color: valueColor,
                             decoration: onValueTap != null ? TextDecoration.underline : null,
@@ -408,7 +426,7 @@ class _ToggleRow extends StatelessWidget {
               duration: const Duration(milliseconds: 200),
               width: 36, height: 20,
               decoration: BoxDecoration(
-                color: isEnabled ? toggleColor : AppColors.s4,
+                color: isEnabled ? toggleColor : AppColors.border,
                 borderRadius: BorderRadius.circular(10),
               ),
               child: AnimatedAlign(

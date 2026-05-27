@@ -4,9 +4,18 @@ import '../../data/api/bcv_service.dart';
 import '../../data/cache/local_storage.dart';
 import '../../data/models/tasa_model.dart';
 import '../../core/connectivity.dart';
+import '../../services/widget_service.dart';
 
 final sharedPreferencesProvider = Provider<SharedPreferences>((ref) {
-  throw UnimplementedError('Must be overridden in main');
+  throw UnimplementedError(
+    'sharedPreferencesProvider debe ser sobreescrito antes de usarse. '
+    'Hazlo en main() así:\n'
+    '  final prefs = await SharedPreferences.getInstance();\n'
+    '  ProviderScope(\n'
+    '    overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],\n'
+    '    child: TasaVeApp(),\n'
+    '  )',
+  );
 });
 
 final localStorageProvider = Provider<LocalStorage>((ref) {
@@ -40,7 +49,20 @@ class TasaNotifier extends StateNotifier<AsyncValue<TasaModel>> {
       state = AsyncValue.data(cached);
     }
 
+    // Precarga historial para sparkline y modo offline.
+    _prefetchHistory();
+
     await refresh();
+  }
+
+  Future<void> _prefetchHistory() async {
+    try {
+      final service = _ref.read(bcvServiceProvider);
+      final history = await service.fetchHistory(days: 7);
+      await _ref.read(localStorageProvider).cacheHistory(history);
+    } catch (_) {
+      // Fallback silencioso: sparkline usará caché existente.
+    }
   }
 
   Future<void> refresh() async {
@@ -64,6 +86,8 @@ class TasaNotifier extends StateNotifier<AsyncValue<TasaModel>> {
       final cache = _ref.read(localStorageProvider);
       await cache.cacheTasa(tasa);
       state = AsyncValue.data(tasa);
+      final isPremium = _ref.read(localStorageProvider).isPremium;
+      await WidgetService.updateFromTasa(tasa, isPremium: isPremium);
     } catch (e) {
       final cache = _ref.read(localStorageProvider);
       final cached = cache.getCachedTasa();
@@ -75,17 +99,3 @@ class TasaNotifier extends StateNotifier<AsyncValue<TasaModel>> {
     }
   }
 }
-
-final variationProvider = FutureProvider<double>((ref) async {
-  final service = ref.watch(bcvServiceProvider);
-  try {
-    final history = await service.fetchHistory(days: 7);
-    if (history.isNotEmpty) {
-      // Use the API's own variation field from the most recent entry
-      return history[0].variation;
-    }
-    return 0.0;
-  } catch (_) {
-    return 0.0;
-  }
-});

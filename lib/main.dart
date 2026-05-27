@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -7,18 +8,32 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'core/theme.dart';
 import 'presentation/providers/tasa_provider.dart';
 import 'presentation/providers/accessibility_provider.dart';
-import 'presentation/providers/alerts_provider.dart';
-import 'data/services/notification_service.dart';
+import 'presentation/providers/subscription_provider.dart';
+import 'presentation/providers/theme_provider.dart';
+import 'services/widget_service.dart';
 import 'utils/accessibility.dart';
+import 'utils/error_monitor.dart';
 import 'presentation/screens/shell_screen.dart';
+import 'presentation/screens/splash_screen.dart';
+import 'presentation/screens/onboarding_screen.dart';
+import 'presentation/widgets/responsive_wrapper.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await initializeDateFormatting('es', null);
+  ErrorMonitor.install();
+
+  final initFutures = <Future<void>>[
+    initializeDateFormatting('es', null),
+    SharedPreferences.getInstance(),
+  ];
   if (!kIsWeb) {
-    await MobileAds.instance.initialize();
+    initFutures.add(MobileAds.instance.initialize());
+    if (Platform.isAndroid) {
+      initFutures.add(WidgetService.init());
+    }
   }
-  final prefs = await SharedPreferences.getInstance();
+  final results = await Future.wait(initFutures);
+  final prefs = results[1] as SharedPreferences;
 
   runApp(
     ProviderScope(
@@ -30,47 +45,75 @@ void main() async {
   );
 }
 
-class TasaVeApp extends ConsumerWidget {
+class TasaVeApp extends ConsumerStatefulWidget {
   const TasaVeApp({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<TasaVeApp> createState() => _TasaVeAppState();
+}
+
+class _TasaVeAppState extends ConsumerState<TasaVeApp> {
+  @override
+  void initState() {
+    super.initState();
+    if (!kIsWeb) {
+      Future.microtask(() => ref.read(subscriptionServiceProvider).init());
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final isAccessible = ref.watch(accessibilityProvider);
     final scale = Accessibility.fontScale(isAccessible);
 
-    // Initialize notifications and register token with alerts provider
-    _initNotifications(ref);
+    final themeMode = ref.watch(themeModeProvider);
 
     return MaterialApp(
       title: 'TasaVe',
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.dark,
+      theme: AppTheme.light,
       darkTheme: AppTheme.dark,
-      themeMode: ThemeMode.dark,
+      themeMode: themeMode,
       builder: (context, child) {
         return MediaQuery(
           data: MediaQuery.of(context).copyWith(
             textScaler: TextScaler.linear(scale),
           ),
-          child: child!,
+          child: ResponsiveWrapper(child: child!),
         );
       },
-      home: const ShellScreen(),
+      home: const SplashScreen(child: _OnboardingGate()),
     );
   }
+}
 
-  static bool _notificationsInitialized = false;
+class _OnboardingGate extends ConsumerStatefulWidget {
+  const _OnboardingGate();
 
-  void _initNotifications(WidgetRef ref) {
-    if (_notificationsInitialized) return;
-    _notificationsInitialized = true;
+  @override
+  ConsumerState<_OnboardingGate> createState() => _OnboardingGateState();
+}
 
-    Future.microtask(() async {
-      final notifService = NotificationService();
-      final success = await notifService.initialize();
-      if (success && notifService.token != null) {
-        ref.read(alertsProvider.notifier).setFcmToken(notifService.token!);
-      }
-    });
+class _OnboardingGateState extends ConsumerState<_OnboardingGate> {
+  bool? _done;
+
+  @override
+  void initState() {
+    super.initState();
+    _check();
+  }
+
+  Future<void> _check() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() => _done = prefs.getBool('onboarding_done') ?? false);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_done == null) return const SizedBox.shrink();
+    if (_done!) return const ShellScreen();
+    return OnboardingScreen(
+      onComplete: () => setState(() => _done = true),
+    );
   }
 }

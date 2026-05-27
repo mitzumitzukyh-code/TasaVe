@@ -5,8 +5,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/constants.dart';
-import '../providers/tasa_provider.dart';
 import '../../utils/formatters.dart';
+import '../providers/tasa_provider.dart';
+import '../../core/constants/subscription_constants.dart';
+import '../providers/subscription_provider.dart';
+import 'qr_pay_screen.dart';
 
 // ── Provider ──────────────────────────────────────────────
 
@@ -83,7 +86,7 @@ class PaymentProfile {
     }
     if (notes.isNotEmpty) lines.add('📝 $notes');
     lines.add('');
-    lines.add('_Enviado desde TasaVe • tasave-app.pages.dev_');
+    lines.add('_Enviado desde TasaVe_');
     return lines.join('\n');
   }
 }
@@ -140,51 +143,196 @@ class PerfilesScreen extends ConsumerWidget {
     final tasaAsync = ref.watch(tasaProvider);
     final bcvRate = tasaAsync.valueOrNull?.bcvUsd ?? 0;
 
+    final isPremium = ref.watch(isPremiumProvider);
+
     return Scaffold(
       backgroundColor: AppColors.bg,
-      body: SafeArea(
-        child: Column(
-          children: [
-            // ── Header ──
-            Padding(
-              padding: const EdgeInsets.fromLTRB(18, 6, 18, 8),
-              child: Row(
-                children: [
-                  RichText(
-                    text: TextSpan(
-                      style: GoogleFonts.bebasNeue(fontSize: 24, letterSpacing: 2),
-                      children: const [
-                        TextSpan(text: 'PERFILES', style: TextStyle(color: AppColors.text)),
-                        TextSpan(text: ' DE PAGO', style: TextStyle(color: AppColors.green)),
-                      ],
-                    ),
+      appBar: AppBar(
+        backgroundColor: AppColors.primary,
+        elevation: 0,
+        title: Text(
+          'Perfil',
+          style: GoogleFonts.dmSans(
+            fontSize: 22,
+            fontWeight: FontWeight.w900,
+            color: Colors.white,
+          ),
+        ),
+      ),
+      body: Column(
+        children: [
+          // ── Acceso QR Pago Móvil (arriba, más visible) ──
+          Padding(
+            padding: const EdgeInsets.fromLTRB(13, 12, 13, 0),
+            child: Material(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(14),
+              child: InkWell(
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const QrPayScreen()),
+                ),
+                borderRadius: BorderRadius.circular(14),
+                child: Container(
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: AppColors.border),
                   ),
-                  const Spacer(),
-                  GestureDetector(
-                    onTap: () => _showEditSheet(context, ref, null, bcvRate),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: AppColors.green,
-                        borderRadius: BorderRadius.circular(20),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: AppColors.primary.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: const Icon(Icons.qr_code_2_rounded, color: AppColors.primary),
                       ),
-                      child: Text(
-                        '+ NUEVO',
-                        style: GoogleFonts.spaceMono(
-                          fontSize: 9, fontWeight: FontWeight.w700,
-                          color: const Color(0xFF050505),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Mi QR de Pago Móvil',
+                              style: GoogleFonts.dmSans(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            Text(
+                              'Genera y comparte tu código QR',
+                              style: GoogleFonts.dmSans(fontSize: 11, color: AppColors.text3),
+                            ),
+                          ],
                         ),
                       ),
-                    ),
+                      const Icon(Icons.chevron_right_rounded, color: AppColors.text3),
+                    ],
                   ),
-                ],
+                ),
               ),
             ),
+          ),
+          // ── Card TasaVe Pro (solo free) ──
+          if (!isPremium)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(13, 10, 13, 0),
+              child: GestureDetector(
+                onTap: () => _showProRequired(context),
+                child: Container(
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFFE53935), Color(0xFFC62828)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Icon(Icons.workspace_premium_rounded, color: Colors.white, size: 20),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'TasaVe Pro — \$1.99/mes',
+                              style: GoogleFonts.dmSans(
+                                fontSize: 14, fontWeight: FontWeight.w800,
+                                color: Colors.white,
+                              ),
+                            ),
+                            Text(
+                              'Historial 365d · Export CSV · Sin anuncios · Perfiles ilimitados',
+                              style: GoogleFonts.dmSans(
+                                fontSize: 10, color: Colors.white70,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          'Ver plan',
+                          style: GoogleFonts.dmSans(
+                            fontSize: 11, fontWeight: FontWeight.w700,
+                            color: AppColors.primary,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          // ── Header perfiles ──
+          Padding(
+            padding: const EdgeInsets.fromLTRB(18, 14, 18, 8),
+            child: Row(
+              children: [
+                Text(
+                  'Perfiles de pago',
+                  style: GoogleFonts.dmSans(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.text,
+                  ),
+                ),
+                const Spacer(),
+                GestureDetector(
+                  onTap: () {
+                    if (!isPremium && profiles.length >= SubscriptionConstants.freeProfileLimit) {
+                      _showProRequired(context);
+                      return;
+                    }
+                    _showEditSheet(context, ref, null, bcvRate);
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: AppColors.green,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      '+ Nuevo',
+                      style: GoogleFonts.dmSans(
+                        fontSize: 9,
+                        fontWeight: FontWeight.w700,
+                        color: const Color(0xFF050505),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
 
-            // ── Lista o empty state ──
-            Expanded(
+          Expanded(
               child: profiles.isEmpty
-                  ? _EmptyState(onTap: () => _showEditSheet(context, ref, null, bcvRate))
+                  ? _EmptyState(onTap: () {
+                      if (!isPremium && profiles.length >= SubscriptionConstants.freeProfileLimit) {
+                        _showProRequired(context);
+                        return;
+                      }
+                      _showEditSheet(context, ref, null, bcvRate);
+                    })
                   : ListView.separated(
                       padding: const EdgeInsets.fromLTRB(13, 4, 13, 20),
                       itemCount: profiles.length,
@@ -198,6 +346,143 @@ class PerfilesScreen extends ConsumerWidget {
                       ),
                     ),
             ),
+          // ── Progress bar de límite (solo free con 1 perfil) ──
+          if (!isPremium && profiles.isNotEmpty && profiles.length >= SubscriptionConstants.freeProfileLimit)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(13, 0, 13, 8),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: AppColors.border),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          '${profiles.length}/${SubscriptionConstants.freeProfileLimit} perfiles',
+                          style: GoogleFonts.dmSans(fontSize: 10, color: AppColors.text2),
+                        ),
+                        GestureDetector(
+                          onTap: () => _showProRequired(context),
+                          child: Text(
+                            'Ver Pro →',
+                            style: GoogleFonts.dmSans(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.primary,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(4),
+                      child: LinearProgressIndicator(
+                        value: 1.0,
+                        minHeight: 4,
+                        backgroundColor: AppColors.bg,
+                        valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Límite alcanzado · Pro desbloquea perfiles ilimitados',
+                      style: GoogleFonts.dmSans(fontSize: 10, color: AppColors.primary),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  void _showProRequired(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppColors.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) => Padding(
+        padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                width: 36, height: 4,
+                margin: const EdgeInsets.only(bottom: 20),
+                decoration: BoxDecoration(
+                  color: AppColors.border,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(Icons.workspace_premium_rounded, color: AppColors.primary),
+                ),
+                const SizedBox(width: 12),
+                Text(
+                  'TasaVe Pro',
+                  style: GoogleFonts.dmSans(fontSize: 18, fontWeight: FontWeight.w900),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Con el plan Pro desbloqueas:',
+              style: GoogleFonts.dmSans(fontSize: 13, color: AppColors.text2),
+            ),
+            const SizedBox(height: 10),
+            ...[
+              'Perfiles de pago ilimitados',
+              'Sin anuncios en toda la app',
+              'Historial completo + exportar CSV',
+              'Escaneos de facturas ilimitados',
+              'Widget en pantalla de inicio',
+            ].map((f) => Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4),
+              child: Row(
+                children: [
+                  const Icon(Icons.check_circle_rounded, size: 16, color: AppColors.green),
+                  const SizedBox(width: 8),
+                  Text(f, style: GoogleFonts.dmSans(fontSize: 13)),
+                ],
+              ),
+            )),
+            const SizedBox(height: 20),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+                onPressed: () => Navigator.pop(context),
+                child: Text(
+                  'Ver TasaVe Pro — 1,99 USD/mes',
+                  style: GoogleFonts.dmSans(fontWeight: FontWeight.w700),
+                ),
+              ),
+            ),
           ],
         ),
       ),
@@ -207,7 +492,7 @@ class PerfilesScreen extends ConsumerWidget {
   void _shareProfile(BuildContext context, PaymentProfile profile, double bcvRate) {
     showModalBottomSheet(
       context: context,
-      backgroundColor: AppColors.s2,
+      backgroundColor: AppColors.surface,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
@@ -219,7 +504,7 @@ class PerfilesScreen extends ConsumerWidget {
   void _showEditSheet(BuildContext context, WidgetRef ref, PaymentProfile? existing, double bcvRate) {
     showModalBottomSheet(
       context: context,
-      backgroundColor: AppColors.s2,
+      backgroundColor: AppColors.surface,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
@@ -259,7 +544,7 @@ class _ProfileCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.s2,
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(AppColors.r2),
         border: Border.all(color: AppColors.border),
       ),
@@ -273,7 +558,7 @@ class _ProfileCard extends StatelessWidget {
                 Container(
                   width: 32, height: 32,
                   decoration: BoxDecoration(
-                    color: AppColors.greenDim,
+                    color: AppColors.greenLight,
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: const Icon(Icons.credit_card_rounded, color: AppColors.green, size: 16),
@@ -334,7 +619,7 @@ class _ProfileCard extends StatelessWidget {
                   const SizedBox(width: 6),
                   Text(
                     'COMPARTIR POR WHATSAPP',
-                    style: GoogleFonts.spaceMono(
+                    style: GoogleFonts.dmSans(
                       fontSize: 9, fontWeight: FontWeight.w700,
                       color: AppColors.whatsappGreen, letterSpacing: 1,
                     ),
@@ -368,7 +653,7 @@ class _FieldRow extends StatelessWidget {
           Expanded(
             child: Text(
               value,
-              style: GoogleFonts.spaceMono(fontSize: 10, color: AppColors.text2),
+              style: GoogleFonts.dmSans(fontSize: 10, color: AppColors.text2),
               overflow: TextOverflow.ellipsis,
             ),
           ),
@@ -418,18 +703,18 @@ class _ShareSheetState extends State<_ShareSheet> {
             ),
           ),
           const SizedBox(height: 14),
-          Text('COMPARTIR PERFIL', style: GoogleFonts.spaceMono(fontSize: 9, letterSpacing: 2, color: AppColors.text3)),
+          Text('COMPARTIR PERFIL', style: GoogleFonts.dmSans(fontSize: 9, letterSpacing: 2, color: AppColors.text3)),
           const SizedBox(height: 12),
           // Monto opcional
           TextField(
             controller: _amountCtrl,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            style: GoogleFonts.bebasNeue(fontSize: 22, color: AppColors.text),
+            style: GoogleFonts.dmSans(fontSize: 22, fontWeight: FontWeight.w600, color: AppColors.text),
             decoration: InputDecoration(
               hintText: 'Monto en \$ (opcional)',
               hintStyle: GoogleFonts.dmSans(fontSize: 13, color: AppColors.text3),
               prefixText: '\$ ',
-              prefixStyle: GoogleFonts.spaceMono(color: AppColors.green),
+              prefixStyle: GoogleFonts.dmSans(color: AppColors.green),
               enabledBorder: const UnderlineInputBorder(borderSide: BorderSide(color: AppColors.border)),
               focusedBorder: const UnderlineInputBorder(borderSide: BorderSide(color: AppColors.green)),
             ),
@@ -440,7 +725,7 @@ class _ShareSheetState extends State<_ShareSheet> {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: AppColors.s3,
+              color: AppColors.bg,
               borderRadius: BorderRadius.circular(12),
               border: Border.all(color: AppColors.border),
             ),
@@ -452,7 +737,7 @@ class _ShareSheetState extends State<_ShareSheet> {
               Expanded(
                 child: OutlinedButton.icon(
                   icon: const Icon(Icons.copy_rounded, size: 15),
-                  label: Text('COPIAR', style: GoogleFonts.spaceMono(fontSize: 9, fontWeight: FontWeight.w700, letterSpacing: 1)),
+                  label: Text('COPIAR', style: GoogleFonts.dmSans(fontSize: 9, fontWeight: FontWeight.w700, letterSpacing: 1)),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: AppColors.text,
                     side: const BorderSide(color: AppColors.border2),
@@ -464,7 +749,7 @@ class _ShareSheetState extends State<_ShareSheet> {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Text('Copiado al portapapeles', style: GoogleFonts.dmSans(fontSize: 12)),
-                        backgroundColor: AppColors.s3,
+                        backgroundColor: AppColors.surface,
                         duration: const Duration(seconds: 2),
                       ),
                     );
@@ -475,7 +760,7 @@ class _ShareSheetState extends State<_ShareSheet> {
               Expanded(
                 child: ElevatedButton.icon(
                   icon: const Icon(Icons.share_rounded, size: 15),
-                  label: Text('WHATSAPP', style: GoogleFonts.spaceMono(fontSize: 9, fontWeight: FontWeight.w700, letterSpacing: 1)),
+                  label: Text('WHATSAPP', style: GoogleFonts.dmSans(fontSize: 9, fontWeight: FontWeight.w700, letterSpacing: 1)),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.whatsappGreen,
                     foregroundColor: Colors.white,
@@ -556,7 +841,7 @@ class _EditSheetState extends State<_EditSheet> {
           const SizedBox(height: 14),
           Text(
             widget.existing == null ? 'NUEVO PERFIL' : 'EDITAR PERFIL',
-            style: GoogleFonts.spaceMono(fontSize: 9, letterSpacing: 2, color: AppColors.text3),
+            style: GoogleFonts.dmSans(fontSize: 9, letterSpacing: 2, color: AppColors.text3),
           ),
           const SizedBox(height: 14),
           _Field('Nombre del perfil *', _name, hint: 'Ej: Mi cuenta BDV'),
@@ -591,7 +876,7 @@ class _EditSheetState extends State<_EditSheet> {
                 widget.onSave(profile);
                 Navigator.pop(context);
               },
-              child: Text('GUARDAR', style: GoogleFonts.spaceMono(fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 2)),
+              child: Text('GUARDAR', style: GoogleFonts.dmSans(fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 2)),
             ),
           ),
         ],
@@ -633,11 +918,11 @@ class _EmptyState extends StatelessWidget {
         children: [
           Container(
             padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(color: AppColors.s2, shape: BoxShape.circle),
+            decoration: BoxDecoration(color: AppColors.greenLight, shape: BoxShape.circle),
             child: const Icon(Icons.credit_card_rounded, color: AppColors.green, size: 32),
           ),
           const SizedBox(height: 16),
-          Text('Sin perfiles de pago', style: GoogleFonts.bebasNeue(fontSize: 20, color: AppColors.text, letterSpacing: 1)),
+          Text('Sin perfiles de pago', style: GoogleFonts.dmSans(fontSize: 20, fontWeight: FontWeight.w800, color: AppColors.text)),
           const SizedBox(height: 6),
           Text('Crea perfiles para compartir\ntus datos bancarios rápidamente',
             textAlign: TextAlign.center,
@@ -652,7 +937,7 @@ class _EmptyState extends StatelessWidget {
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Text('CREAR PRIMER PERFIL',
-                style: GoogleFonts.spaceMono(fontSize: 10, fontWeight: FontWeight.w700, color: const Color(0xFF050505))),
+                style: GoogleFonts.dmSans(fontSize: 10, fontWeight: FontWeight.w700, color: const Color(0xFF050505))),
             ),
           ),
         ],

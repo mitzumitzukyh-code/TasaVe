@@ -7,6 +7,8 @@ class LocalStorage {
   static const String _HISTORY_KEY = 'cached_history';
   static const String _USER_PLAN_KEY = 'user_plan';
   static const String _ACCESSIBLE_KEY = 'accessible_mode';
+  static const String _SCAN_DATE_KEY = 'scan_date';
+  static const String _SCAN_COUNT_KEY = 'scan_count';
 
   final SharedPreferences _prefs;
   SharedPreferences get prefs => _prefs;
@@ -27,7 +29,6 @@ class LocalStorage {
     final list = history.map((e) => {
       'date': e.date.toIso8601String(),
       'bcvUsd': e.bcvUsd,
-      'bcvEur': e.bcvEur,
       'variation': e.variation,
     }).toList();
     await _prefs.setString(_HISTORY_KEY, jsonEncode(list));
@@ -50,5 +51,28 @@ class LocalStorage {
 
   Future<void> setUserPlan(String plan) async {
     await _prefs.setString(_USER_PLAN_KEY, plan);
+  }
+
+  int get dailyScanCount {
+    final today = _todayKey();
+    final saved = _prefs.getString(_SCAN_DATE_KEY);
+    if (saved != today) return 0;
+    return _prefs.getInt(_SCAN_COUNT_KEY) ?? 0;
+  }
+
+  Future<void> incrementDailyScanCount() async {
+    final today = _todayKey();
+    final saved = _prefs.getString(_SCAN_DATE_KEY);
+    if (saved != today) {
+      await _prefs.setString(_SCAN_DATE_KEY, today);
+      await _prefs.setInt(_SCAN_COUNT_KEY, 1);
+      return;
+    }
+    await _prefs.setInt(_SCAN_COUNT_KEY, dailyScanCount + 1);
+  }
+
+  String _todayKey() {
+    final n = DateTime.now();
+    return '${n.year}-${n.month}-${n.day}';
   }
 }

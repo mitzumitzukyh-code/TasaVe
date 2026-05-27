@@ -8,6 +8,7 @@ import '../../utils/formatters.dart';
 import '../providers/tasa_provider.dart';
 import '../providers/accessibility_provider.dart';
 import '../providers/shell_provider.dart';
+import '../providers/history_provider.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -16,6 +17,7 @@ class HomeScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final tasaAsync = ref.watch(tasaProvider);
     final userPlan = ref.watch(userPlanProvider);
+    final isPremium = userPlan == 'premium';
     final variation = ref.watch(variationProvider).valueOrNull ?? 0.0;
 
     return Scaffold(
@@ -67,7 +69,6 @@ class HomeScreen extends ConsumerWidget {
                   variation: variation,
                   timestamp: tasa.timestamp,
                   isFromCache: tasa.isFromCache,
-                  bcvStatus: tasa.bcvStatus,
                 ),
                 loading: () => _MainCard(rate: 0, variation: 0, isLoading: true),
                 error: (_, __) => _MainCard(rate: 0, variation: 0, isError: true),
@@ -79,9 +80,9 @@ class HomeScreen extends ConsumerWidget {
               padding: const EdgeInsets.fromLTRB(13, 7, 13, 0),
               child: tasaAsync.when(
                 data: (tasa) => _MiniGrid(
-                  p2p: tasa.usdtP2P ?? 0,
+                  p2p: tasa.usdtP2P,
                   yadio: tasa.yadioRate ?? 0,
-                  eurBcv: tasa.bcvEur,
+                  eurBcv: tasa.bcvEur ?? 0,
                   bcvUsd: tasa.bcvUsd,
                   variation: variation,
                 ),
@@ -100,12 +101,6 @@ class HomeScreen extends ConsumerWidget {
                     extras.add(_CurrencyRow(code: 'COP', name: 'Peso colombiano', value: tasa.bcvCop!));
                   if (tasa.bcvBrl != null && tasa.bcvBrl! > 0)
                     extras.add(_CurrencyRow(code: 'BRL', name: 'Real brasileño', value: tasa.bcvBrl!));
-                  if (tasa.bcvCny != null && tasa.bcvCny! > 0)
-                    extras.add(_CurrencyRow(code: 'CNY', name: 'Yuan chino', value: tasa.bcvCny!));
-                  if (tasa.bcvTry != null && tasa.bcvTry! > 0)
-                    extras.add(_CurrencyRow(code: 'TRY', name: 'Lira turca', value: tasa.bcvTry!));
-                  if (tasa.bcvRub != null && tasa.bcvRub! > 0)
-                    extras.add(_CurrencyRow(code: 'RUB', name: 'Rublo ruso', value: tasa.bcvRub!));
                   if (extras.isEmpty) return const SizedBox.shrink();
                   return _OtrasMonedas(rows: extras);
                 },
@@ -133,7 +128,12 @@ class HomeScreen extends ConsumerWidget {
             Padding(
               padding: const EdgeInsets.fromLTRB(13, 6, 13, 0),
               child: tasaAsync.when(
-                data: (tasa) => _AlertRow(spread: tasa.spreadPercent, status: tasa.bcvStatus),
+                data: (tasa) {
+                  final sp = tasa.usdtP2P > 0 && tasa.bcvUsd > 0
+                      ? ((tasa.usdtP2P - tasa.bcvUsd) / tasa.bcvUsd * 100)
+                      : 0.0;
+                  return _AlertRow(spread: sp, status: tasa.nextUpdateMessage);
+                },
                 loading: () => const SizedBox.shrink(),
                 error: (_, __) => const SizedBox.shrink(),
               ),
@@ -149,7 +149,7 @@ class HomeScreen extends ConsumerWidget {
 
     showModalBottomSheet(
       context: context,
-      backgroundColor: AppColors.s2,
+      backgroundColor: AppColors.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
       ),
@@ -198,7 +198,7 @@ class HomeScreen extends ConsumerWidget {
                 trailing: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                   decoration: BoxDecoration(
-                    color: plan == 'premium' ? AppColors.greenDim : AppColors.s4,
+                    color: plan == 'premium' ? AppColors.greenLight : AppColors.border,
                     borderRadius: BorderRadius.circular(100),
                   ),
                   child: Text(
@@ -266,7 +266,7 @@ class _Toggle extends StatelessWidget {
     return Container(
       width: 36, height: 20,
       decoration: BoxDecoration(
-        color: isOn ? color : AppColors.s4,
+        color: isOn ? color : AppColors.border,
         borderRadius: BorderRadius.circular(10),
       ),
       child: AnimatedAlign(
@@ -298,7 +298,7 @@ class _CircleBtn extends StatelessWidget {
       child: Container(
         width: 30, height: 30,
         decoration: BoxDecoration(
-          color: AppColors.s3,
+          color: AppColors.bg,
           shape: BoxShape.circle,
           border: Border.all(color: AppColors.border),
         ),
@@ -316,7 +316,6 @@ class _MainCard extends StatelessWidget {
   final bool isFromCache;
   final bool isLoading;
   final bool isError;
-  final String? bcvStatus;
 
   const _MainCard({
     required this.rate,
@@ -325,7 +324,6 @@ class _MainCard extends StatelessWidget {
     this.isFromCache = false,
     this.isLoading = false,
     this.isError = false,
-    this.bcvStatus,
   });
 
   @override
@@ -335,7 +333,7 @@ class _MainCard extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.s2,
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(AppColors.r3),
         border: Border.all(color: AppColors.border),
       ),
@@ -363,7 +361,7 @@ class _MainCard extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
                       decoration: BoxDecoration(
-                        color: AppColors.greenDim,
+                        color: AppColors.greenLight,
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Text(
@@ -388,7 +386,7 @@ class _MainCard extends StatelessWidget {
                     ? Container(
                         width: 200, height: 58,
                         decoration: BoxDecoration(
-                          color: AppColors.s3,
+                          color: AppColors.bg,
                           borderRadius: BorderRadius.circular(8),
                         ),
                       )
@@ -555,7 +553,7 @@ class _MiniGrid extends StatelessWidget {
             )),
             const SizedBox(width: 7),
             Expanded(child: _MiniCard(
-              label: 'YADIO', value: yadio, dot: AppColors.blue,
+              label: 'YADIO', value: yadio, dot: AppColors.primary,
               diffPercent: yadioDiff, loading: loading,
             )),
           ],
@@ -564,12 +562,12 @@ class _MiniGrid extends StatelessWidget {
         Row(
           children: [
             Expanded(child: _MiniCard(
-              label: 'BCV EUR', value: eurBcv, dot: AppColors.purple,
+              label: 'BCV EUR', value: eurBcv, dot: AppColors.green,
               diffPercent: variation, loading: loading,
             )),
             const SizedBox(width: 7),
             Expanded(child: _MiniCard(
-              label: 'BCV USD', value: bcvUsd, dot: AppColors.amber,
+              label: 'BCV USD', value: bcvUsd, dot: AppColors.yellow,
               diffPercent: variation, loading: loading,
             )),
           ],
@@ -599,7 +597,7 @@ class _MiniCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(11),
       decoration: BoxDecoration(
-        color: AppColors.s2,
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(AppColors.r2),
         border: Border.all(color: AppColors.border),
       ),
@@ -615,7 +613,7 @@ class _MiniCard extends StatelessWidget {
           ),
           const SizedBox(height: 5),
           loading
-              ? Container(width: 60, height: 20, color: AppColors.s3)
+              ? Container(width: 60, height: 20, color: AppColors.bg)
               : Text(
                   value > 0 ? Formatters.formatRate(value) : '—',
                   style: GoogleFonts.bebasNeue(fontSize: 20, color: AppColors.text),
@@ -647,9 +645,9 @@ class _SpreadRow extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
       decoration: BoxDecoration(
-        color: AppColors.amberDim2,
+        color: AppColors.yellowLight,
         borderRadius: BorderRadius.circular(AppColors.r2),
-        border: Border.all(color: AppColors.amber),
+        border: Border.all(color: AppColors.yellow),
       ),
       child: Row(
         children: [
@@ -659,7 +657,7 @@ class _SpreadRow extends StatelessWidget {
               children: [
                 Text(
                   'Spread BCV vs Paralelo',
-                  style: GoogleFonts.dmSans(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.amber),
+                  style: GoogleFonts.dmSans(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.yellow),
                 ),
                 const SizedBox(height: 2),
                 Text(
@@ -671,7 +669,7 @@ class _SpreadRow extends StatelessWidget {
           ),
           Text(
             '+${spread.toStringAsFixed(1)}%',
-            style: GoogleFonts.bebasNeue(fontSize: 30, color: AppColors.amber),
+            style: GoogleFonts.bebasNeue(fontSize: 30, color: AppColors.yellow),
           ),
         ],
       ),
@@ -696,7 +694,7 @@ class _AlertRow extends StatelessWidget {
     if (spread.abs() > 30) {
       title = 'Spread inusual detectado';
       subtitle = 'Paralelo ${spread > 0 ? "+" : ""}${spread.toStringAsFixed(1)}% vs BCV';
-      badgeColor = AppColors.amber;
+      badgeColor = AppColors.yellow;
       badgeText = 'ALERTA';
     } else if (status != null && status!.contains('Monitoreando')) {
       title = 'Monitoreando BCV';
@@ -706,14 +704,14 @@ class _AlertRow extends StatelessWidget {
     } else {
       title = 'Tasa del día actualizada';
       subtitle = status ?? 'BCV publica entre 4:00-6:00 PM VET';
-      badgeColor = AppColors.s4;
+      badgeColor = AppColors.border;
       badgeText = 'INFO';
     }
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
-        color: AppColors.s2,
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(AppColors.r2),
         border: Border.all(color: AppColors.border),
       ),
@@ -766,7 +764,7 @@ class _OtrasMonedas extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.s2,
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(AppColors.r2),
         border: Border.all(color: AppColors.border),
       ),
@@ -792,7 +790,7 @@ class _OtrasMonedas extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
                     decoration: BoxDecoration(
-                      color: AppColors.s3,
+                      color: AppColors.bg,
                       borderRadius: BorderRadius.circular(6),
                       border: Border.all(color: AppColors.border2),
                     ),
@@ -862,7 +860,7 @@ class _AdBannerSlotState extends ConsumerState<_AdBannerSlot> {
         height: 46,
         margin: const EdgeInsets.fromLTRB(13, 6, 13, 0),
         decoration: BoxDecoration(
-          color: AppColors.s1,
+          color: AppColors.bg,
           borderRadius: BorderRadius.circular(AppColors.r1),
           border: Border.all(color: AppColors.border2, width: 1.5),
         ),
