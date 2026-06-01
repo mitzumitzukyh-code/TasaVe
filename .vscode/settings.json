@@ -1,0 +1,20 @@
+{
+    "chat.tools.terminal.autoApprove": {
+        "/^flutter build apk --release 2>&1$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^flutter analyze --no-fatal-infos lib/core/theme\\.dart lib/core/theme/app_colors\\.dart lib/core/theme/app_tokens\\.dart$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^flutter analyze --no-fatal-infos$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^flutter run -d chrome$/": {
+            "approve": true,
+            "matchCommandLine": true
+        }
+    }
+}

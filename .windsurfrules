@@ -1,152 +1,109 @@
-# ============================================================
-# WINDSURF RULES — PROYECTO TASAVE (Actualizado 2025-05-18)
-# Este archivo es leído automáticamente por Windsurf/Cascade
-# ============================================================
+# WINDSURF RULES — PROYECTO TASAVE
 
-## IDENTIDAD DEL PROYECTO
-- Nombre: TasaVe
-- Tipo: App Flutter multiplataforma (Android + iOS + Web)
-- Propósito: Consulta de tasa de cambio BCV para Venezuela
-- Backend: Cloudflare Workers + KV (tasave-api)
-- Frontend Web: Cloudflare Pages (tasave-app)
-- URL de producción: https://tasave-app.pages.dev/ (NUNCA cambiar este dominio)
-- Developer: mItz
-- Idioma de UI: Español (Venezuela)
-- Responder siempre al usuario en español
-- Filosofía de diseño: UI limpia, colores sólidos, funciones simples sin sobrecarga visual
+## Identidad
+- **Nombre**: TasaVe — App Flutter (Android + iOS + Web)
+- **Propósito**: Consultar tasa de cambio BCV de Venezuela en tiempo real
+- **Backend**: Cloudflare Workers + KV
+- **URL producción**: https://tasave-app.pages.dev/ (NUNCA cambiar)
+- **Idioma**: Español (Venezuela)
+- **Filosofía**: UI limpia, minimalista, rojo + blanco + negro
 
-## STACK TECNOLÓGICO ACTUAL
-- Flutter 3.x / Dart 3.x
-- State management: Riverpod (StateNotifierProvider, FutureProvider, FutureProvider.family)
-- HTTP: Dio con interceptores
-- Storage local: SharedPreferences (via localStorageProvider)
-- Charts: fl_chart
-- Fonts: Google Fonts (Bebas Neue, DM Sans, Space Mono)
-- Ads: google_mobile_ads (AdMob)
-- Backend: Cloudflare Workers (Wrangler CLI)
-- Deploy web: `npx wrangler pages deploy build/web --project-name=tasave-app`
-- Deploy backend: `npx wrangler deploy` (desde /backend)
+## Stack
+| Capa        | Tecnología                              |
+|-------------|-----------------------------------------|
+| Frontend    | Flutter 3.x / Dart 3.x                  |
+| Estado      | Riverpod (StateNotifierProvider, FutureProvider, FutureProvider.family) |
+| HTTP        | Dio                                     |
+| Storage     | SharedPreferences                       |
+| Charts      | fl_chart                                |
+| Tipografía  | DM Sans (sans-serif), Space Mono (mono) |
+| Ads         | google_mobile_ads — SOLO en home_screen |
+| Backend     | Cloudflare Workers + KV + Wrangler CLI  |
 
----
-
-## ESTRUCTURA DE ARCHIVOS
-```
-lib/
-├── main.dart                          # ConsumerWidget, aplica textScaler global
-├── core/
-│   ├── constants.dart                 # AppColors, AppText, API URLs, AdMob IDs
-│   └── theme.dart                     # AppTheme.dark (único tema)
-├── data/
-│   ├── api/bcv_service.dart           # BcvService: fetchCurrentRate(), fetchHistory()
-│   ├── cache/local_storage.dart       # LocalStorage: cacheTasa, cacheHistory, accessibleMode
-│   └── models/tasa_model.dart         # TasaModel (bcvUsd, bcvEur, usdtP2P, yadioRate, spreadPercent)
-├── presentation/
-│   ├── screens/
-│   │   ├── shell_screen.dart          # IndexedStack + bottom nav (5 tabs)
-│   │   ├── home_screen.dart           # Tasa principal, mini grid, spread, alert row
-│   │   ├── calculator_screen.dart     # 3 tabs (USD→Bs, Bs→USD, Histórico), keypad, = copia clipboard
-│   │   ├── history_screen.dart        # Gráfica fl_chart, filtros 7/30/90/365 días
-│   │   ├── remesas_screen.dart        # Comparador plataformas (Zinli, Zelle, Binance, Reserve, PayPal)
-│   │   └── alerts_screen.dart         # Alertas dinámicas basadas en spread/status + toggles
-│   └── providers/
-│       ├── tasa_provider.dart         # tasaProvider, bcvServiceProvider, localStorageProvider
-│       ├── history_provider.dart      # historyProvider (FutureProvider.family<List<TasaHistoryEntry>, int>)
-│       ├── accessibility_provider.dart # accessibilityProvider (bool) + toggle()
-│       └── shell_provider.dart        # shellTabProvider (índice de tab activo)
-└── utils/
-    ├── formatters.dart                # Formatters.formatRate(), formatCurrency(), timeAgo()
-    └── accessibility.dart             # Accessibility.fontScale(), scaledFontSize(), MIN_TOUCH_TARGET
-backend/
-├── src/index.js                       # Cloudflare Worker: /tasa, /tasa/history, /health
-├── wrangler.toml                      # Config: tasave-api, KV binding TASAVE_KV
-└── package.json
-web/
-├── index.html                         # SEO: canonical, JSON-LD, noscript fallback, OG tags
-├── robots.txt
-├── sitemap.xml
-└── manifest.json
+## Paleta de colores (inmutable)
+```dart
+Color primary    = Color(0xFFE53935);  // Rojo TasaVe
+Color primaryDrk = Color(0xFFC62828);  // Rojo oscuro
+Color primaryLgt = Color(0xFFFFF0F0);  // Fondo rojo suave
+Color bg         = Color(0xFFFFFFFF);  // Blanco fondo
+Color surface    = Color(0xFFF5F5F5);  // Gris claro
+Color surface2   = Color(0xFFEEEEEE);  // Gris más claro
+Color text       = Color(0xFF1A1A1A);  // Casi negro
+Color text2      = Color(0xFF757575);  // Gris medio
+Color text3      = Color(0xFF9E9E9E);  // Gris claro
+Color border     = Color(0xFFE0E0E0);  // Borde
+Color success    = Color(0xFF2E7D32);  // Verde (subidas)
+Color error      = Color(0xFFC62828);  // Rojo (bajadas)
+Color warning    = Color(0xFFF57C00);  // Ámbar
 ```
 
-## MODELO DE DATOS (TasaModel)
+## Tipografía
+| Uso          | Fuente     | Peso            |
+|-------------|------------|-----------------|
+| Títulos      | DM Sans    | Bold (700)      |
+| Cuerpo       | DM Sans    | Regular (400)   |
+| Tasas/números| Space Mono | Regular (400)   |
+| Pequeño      | DM Sans    | Medium (500)    |
+
+## Modelo principal
 ```dart
 class TasaModel {
-  final double bcvUsd;      // Tasa oficial BCV USD
-  final double bcvEur;      // Tasa oficial BCV EUR
-  final double? usdtP2P;    // Binance P2P promedio top 5
-  final double? yadioRate;  // Yadio.io tasa libre
+  final double bcvUsd;       // BCV USD oficial
+  final double usdtP2P;      // Binance P2P top 5
+  final double? yadioRate;   // Yadio.io tasa libre
+  final double? bcvEur;      // BCV EUR
+  final double? bcvCop;      // BCV COP
+  final double? bcvBrl;      // BCV BRL
   final DateTime timestamp;
   final bool isFromCache;
-  final String? bcvStatus;  // "Monitoreando BCV..." / "Tasa del día actualizada"
-  double get spreadPercent; // (P2P - BCV) / BCV * 100
+  final String? nextUpdateMessage;
 }
 ```
 
-## API ENDPOINTS
-- `GET /tasa` → TasaModel + nextUpdate (watching/done/waiting)
-- `GET /tasa/history?days=30` → List<TasaHistoryEntry>
-- `GET /health` → { status: 'ok' }
-- Fuentes de datos: DolarAPI.com → BCV directo → ExchangeMonitor (fallbacks)
-- P2P: Binance P2P API (USDT/VES, top 5 SELL ads promedio)
-- Yadio: yadio.io/exrates/VES
+## Constantes fiscales
+- `lib/core/constants/app_constants.dart`
+- IVA = 0.16 (16%) · IGTF = 0.03 (3%)
 
----
+## Providers
+| Provider                | Tipo                                      |
+|-------------------------|-------------------------------------------|
+| `tasaProvider`          | StateNotifierProvider<TasaNotifier, AsyncValue<TasaModel>> |
+| `historyProvider`       | FutureProvider.family<List<TasaHistoryEntry>, int> |
+| `accessibilityProvider` | StateNotifierProvider<AccessibilityNotifier, bool> |
+| `shellTabProvider`      | StateProvider<int>                        |
+| `localStorageProvider`  | Provider<LocalStorage>                    |
+| `bcvServiceProvider`    | Provider<BcvService>                      |
 
-## REGLAS ABSOLUTAS — NUNCA ROMPER
+## API Endpoints
+| Endpoint                    | Descripción              |
+|-----------------------------|--------------------------|
+| `GET /tasa`                 | Tasa actual + nextUpdate |
+| `GET /tasa/history?days=N`  | Historial N días         |
+| `GET /health`               | Health check             |
 
-### DATOS DINÁMICOS
-- NUNCA hardcodear tasas, porcentajes o textos de datos
-- Toda tasa viene del API (bcvUsd, bcvEur, usdtP2P, yadioRate)
-- Todo porcentaje se calcula: `((valor - bcvUsd) / bcvUsd * 100)`
-- Alert cards se generan dinámicamente desde datos reales
-- Si no hay dato, mostrar "—" o "sin datos", NUNCA inventar valores
+## Reglas absolutas
+1. **NUNCA hardcodear** tasas, spreads, porcentajes — todo del API
+2. **NUNCA inventar valores** — si no hay dato: "—" o "sin datos"
+3. **Offline first** — cachear en SharedPreferences, mostrar caché si no hay red
+4. **Accesibilidad** — textScaler 1.375x global en `MaterialApp.builder`
+5. **Paleta fija**: primary=#E53935, bg=#FFFFFF, text=#1A1A1A
+6. **Fuentes fijas**: DM Sans (sans-serif), Space Mono (mono)
+7. **Errores** siempre en español simple, nunca códigos técnicos
+8. **Ads** SOLO en home_screen, NUNCA en calculator ni otras pantallas
+9. **State management**: SOLO Riverpod — prohibido Provider/Bloc/GetX
+10. **Impuestos** centralizados en `app_constants.dart` (IVA, IGTF)
+11. **Colores semánticos**: success=#2E7D32, error=#C62828, warning=#F57C00
+12. **Calculadora**: máscara de entrada financiera con punto decimal fijo. Los dígitos se desplazan de derecha a izquierda (ej. `5` → `0,05`; `100` → `1,00`). Conversión USD↔Bs instantánea y bidireccional.
 
-### OFFLINE FIRST
-- Siempre cachear última tasa y historial en SharedPreferences
-- Si no hay internet, mostrar datos cacheados con indicador visual
-- NUNCA mostrar pantalla en blanco
+## Prohibiciones
+- ❌ Hardcodear tasas/spreads/porcentajes
+- ❌ `setState` en pantallas principales
+- ❌ Ads en calculator, remesas, scanner
+- ❌ Cambiar colores/fuentes sin aprobación
+- ❌ Inventar datos falsos (multiplicadores, % fake)
+- ❌ Requests sin fallback a caché
 
-### ACCESIBILIDAD
-- Modo accesible: textScaler 1.375x aplicado globalmente en MaterialApp.builder
-- El toggle está en Ajustes (bottom sheet desde home_screen)
-- Estado se persiste en SharedPreferences
-- Botones mínimo 48x48dp de área táctil
-- Errores SIEMPRE en español simple, nunca códigos técnicos
-
-### ANUNCIOS
-- Banner ads: SOLO en home_screen parte inferior
-- NUNCA en calculator_screen ni remesas_screen
-- Premium (userPlanProvider == 'premium'): CERO anuncios
-
-### COLORES (AppColors en constants.dart)
-- bg: #07070A, s2: #111318, s3: #1A1D24
-- green: #00E676, red: #FF5252, amber: #FFD740, blue: #448AFF
-- NO CAMBIAR estos colores sin aprobación explícita
-
-### TIPOGRAFÍA (Google Fonts)
-- Títulos/números grandes: Bebas Neue
-- Cuerpo/UI: DM Sans
-- Monoespaciado/tasas: Space Mono
-- NO CAMBIAR estas fuentes
-
----
-
-## PROHIBICIONES
-- ❌ Hardcodear tasas, spreads o porcentajes
-- ❌ Usar setState en pantallas principales (solo en widgets pequeños)
-- ❌ Usar Provider, Bloc, GetX — SOLO Riverpod
-- ❌ Mostrar anuncios en calculator o remesas
-- ❌ Mostrar errores técnicos al usuario
-- ❌ Cambiar colores o fuentes sin aprobación
-- ❌ Agregar pantallas sin consultar
-- ❌ Usar librerías no aprobadas
-- ❌ Hacer requests sin fallback a caché
-- ❌ Inventar datos falsos (multiplicadores, porcentajes fake)
-
-## CHECKLIST PRE-DEPLOY
-- [ ] `flutter analyze` sin errors ni warnings
-- [ ] Funciona sin internet (datos cacheados)
-- [ ] Calculator libre de anuncios
-- [ ] Modo accesible escala todas las fuentes
-- [ ] Errores en español simple
-- [ ] Botones >= 48dp
-- [ ] SEO: noscript, robots.txt, sitemap.xml, JSON-LD presentes
+## Versión de respaldo
+- Rama: `respaldo/version-real-2026-05-26`
+- Ante regresión: volver SIEMPRE a esta versión
+- `git checkout main && git reset --hard respaldo/version-real-2026-05-26 && git clean -fd`

@@ -4,28 +4,39 @@
 TasaVe es una app Flutter multiplataforma (Android + iOS + Web) para consultar la tasa de cambio BCV de Venezuela en tiempo real. Backend en Cloudflare Workers + KV.
 
 - **URL de producción**: https://tasave-app.pages.dev/ (NUNCA cambiar este dominio)
-- **Filosofía de diseño**: UI limpia, colores sólidos, funciones simples sin sobrecarga visual
+- **Filosofía de diseño**: UI limpia, colores sólidos (rojo + blanco + negro), funciones simples sin sobrecarga visual
 
 ## Reglas de código
 - **State management**: SOLO Riverpod (StateNotifierProvider, FutureProvider, FutureProvider.family). NUNCA usar Provider, Bloc o GetX.
 - **HTTP**: Dio con interceptores
 - **Storage**: SharedPreferences via `localStorageProvider`
 - **Charts**: fl_chart
-- **Fonts**: Google Fonts — Bebas Neue (títulos), DM Sans (cuerpo), Space Mono (monoespaciado)
+- **Fonts**: Google Fonts — DM Sans (sans-serif), Space Mono (monoespaciado)
 - **Ads**: google_mobile_ads — SOLO en home_screen, NUNCA en calculator ni remesas
 
 ## Modelo de datos principal
 ```dart
 class TasaModel {
-  final double bcvUsd;      // Tasa oficial BCV USD
-  final double bcvEur;      // Tasa oficial BCV EUR
-  final double? usdtP2P;    // Binance P2P promedio top 5
-  final double? yadioRate;  // Yadio.io tasa libre
+  final double bcvUsd;       // BCV USD oficial
+  final double usdtP2P;      // Binance P2P top 5
+  final double? yadioRate;   // Yadio.io tasa libre
+  final double? bcvEur;      // BCV EUR
+  final double? bcvCop;      // BCV COP
+  final double? bcvBrl;      // BCV BRL
   final DateTime timestamp;
   final bool isFromCache;
-  final String? bcvStatus;
-  double get spreadPercent; // (P2P - BCV) / BCV * 100
+  final String? nextUpdateMessage;
 }
+```
+
+## Paleta unificada
+```dart
+Color primary  = Color(0xFFE53935);  // Rojo TasaVe
+Color bg       = Color(0xFFFFFFFF);  // Blanco fondo
+Color text     = Color(0xFF1A1A1A);  // Casi negro
+Color success  = Color(0xFF2E7D32);  // Verde (subidas)
+Color error    = Color(0xFFC62828);  // Rojo (bajadas)
+Color warning  = Color(0xFFF57C00);  // Ámbar
 ```
 
 ## Reglas absolutas
@@ -33,16 +44,17 @@ class TasaModel {
 2. **NUNCA inventar valores** — si no hay dato, mostrar "—" o "sin datos"
 3. **Offline first** — cachear en SharedPreferences, mostrar caché si no hay red
 4. **Accesibilidad** — textScaler 1.375x global, toggle en ajustes, persiste en SharedPreferences
-5. **Colores fijos**: bg=#07070A, green=#00E676, red=#FF5252, amber=#FFD740, blue=#448AFF
-6. **Fuentes fijas**: Bebas Neue, DM Sans, Space Mono
+5. **Colores fijos**: primary=#E53935, bg=#FFFFFF, text=#1A1A1A
+6. **Fuentes fijas**: DM Sans (sans-serif), Space Mono (mono)
 7. **Errores** siempre en español simple, nunca códigos técnicos
 8. **Idioma**: UI y respuestas en español (Venezuela)
+9. **Calculadora**: máscara de entrada financiera con punto decimal fijo. Los dígitos se desplazan de derecha a izquierda (ej. `5` → `0,05`; `100` → `1,00`). Conversión USD↔Bs instantánea y bidireccional.
 
 ## Providers clave
-- `tasaProvider` — FutureProvider<TasaModel> (tasa actual)
-- `historyProvider` — FutureProvider.family<List<TasaHistoryEntry>, int> (historial por días)
+- `tasaProvider` — StateNotifierProvider<TasaNotifier, AsyncValue<TasaModel>>
+- `historyProvider` — FutureProvider.family<List<TasaHistoryEntry>, int>
 - `accessibilityProvider` — StateNotifierProvider<AccessibilityNotifier, bool>
-- `shellTabProvider` — StateProvider<int> (tab activo)
+- `shellTabProvider` — StateProvider<int>
 - `localStorageProvider` — Provider<LocalStorage>
 - `bcvServiceProvider` — Provider<BcvService>
 

@@ -1,20 +1,18 @@
 import 'package:dio/dio.dart';
-import '../../core/constants.dart';
 import '../models/tasa_model.dart';
+
+/// URL base del API de TasaVe (Cloudflare Worker).
+/// TODO: Configurar según entorno (producción/desarrollo)
+const _apiBaseUrl = 'https://tasave-api.tusubdominio.workers.dev';
 
 class BcvService {
   late final Dio _dio;
 
   BcvService() {
     _dio = Dio(BaseOptions(
-      baseUrl: ApiConfig.API_BASE_URL,
+      baseUrl: _apiBaseUrl,
       connectTimeout: const Duration(seconds: 10),
       receiveTimeout: const Duration(seconds: 10),
-    ));
-    _dio.interceptors.add(InterceptorsWrapper(
-      onError: (error, handler) {
-        handler.reject(error);
-      },
     ));
   }
 
@@ -23,7 +21,7 @@ class BcvService {
       final response = await _dio.get('/tasa');
       return TasaModel.fromJson(response.data);
     } on DioException {
-      throw Exception(AppStrings.ERROR_API);
+      throw Exception('Error al obtener la tasa. Intenta de nuevo.');
     }
   }
 
@@ -33,7 +31,7 @@ class BcvService {
       final list = response.data as List;
       return list.map((e) => TasaHistoryEntry.fromJson(e)).toList();
     } on DioException {
-      throw Exception(AppStrings.ERROR_API);
+      throw Exception('Error al obtener el historial. Intenta de nuevo.');
     }
   }
 }

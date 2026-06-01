@@ -20,12 +20,7 @@ dependencies:
   connectivity_plus: ^6.0.3
   intl: ^0.19.0
   url_launcher: ^6.2.4
-  qr_flutter: ^4.1.0
-  camera: ^0.10.5
-  google_mlkit_text_recognition: ^0.13.0
-  permission_handler: ^11.3.0
   in_app_purchase: ^3.2.0
-  home_widget: ^0.7.0
 
 dev_dependencies:
   flutter_test:

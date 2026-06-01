@@ -1,4 +1,4 @@
-# CalculaYa — Guía de publicación en Google Play
+# TasaVe — Guía de publicación en Google Play
 
 ## 1. Payoneer (antes de Play Console)
 
@@ -18,9 +18,9 @@ En Play Console → **Monetización → Suscripciones**:
 
 | Campo | Valor |
 |-------|--------|
-| ID del producto | `calculaya_pro_monthly` |
+| ID del producto | `tasave_pro_monthly` |
 | Precio | $1.99 USD / mes |
-| Nombre | CalculaYa Pro |
+| Nombre | TasaVe Pro |
 
 Debe coincidir con `SubscriptionConstants.proMonthlyId` en la app.
 
@@ -42,7 +42,7 @@ npx wrangler pages deploy build/web --project-name=tasave-app
 
 ```bash
 # Crear keystore (una sola vez — guardar copia segura)
-keytool -genkey -v -keystore calculaya-release.jks -keyalg RSA -keysize 2048 -validity 10000 -alias calculaya
+keytool -genkey -v -keystore tasave-release.jks -keyalg RSA -keysize 2048 -validity 10000 -alias tasave
 
 flutter build appbundle --release
 ```
@@ -72,7 +72,7 @@ Salida: `build/app/outputs/apk/release/app-release.apk`
 
 1. Subir AAB a **Prueba interna**.
 2. Agregar 5 testers por correo.
-3. Validar: tasas, calculadora, escáner, suscripción Pro, widget.
+3. Validar: tasas, calculadora, suscripción Pro.
 4. Promover a producción.
 
 ## 8. Flujo de pagos (Venezuela)

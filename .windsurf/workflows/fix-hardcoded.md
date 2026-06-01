@@ -4,41 +4,40 @@ description: Detectar y eliminar datos hardcodeados en la app TasaVe
 
 ## Pasos para auditar hardcodeo
 
-1. Buscar multiplicadores falsos en las pantallas:
+1. Buscar multiplicadores falsos:
 ```
-grep -rn "p2p \*\|p2pRate \*\|bcvRate \*" lib/presentation/screens/
+grep -rn "p2p \*\|p2pRate \*\|bcvRate \*" lib/
 ```
 Si encuentra `* 0.99`, `* 1.002` o similar → reemplazar con dato real del API.
 
 2. Buscar porcentajes inventados:
 ```
-grep -rn "% hoy\|% 99\|value \* 7" lib/presentation/screens/
+grep -rn "% hoy\|% 99\|value \* 7" lib/
 ```
 Todo porcentaje debe calcularse: `((valor - bcvUsd) / bcvUsd * 100)`
 
 3. Buscar callbacks vacíos:
 ```
-grep -rn "onTap: () {}" lib/presentation/screens/
+grep -rn "onTap: () {}" lib/
 ```
 Todo botón debe tener acción real.
 
 4. Buscar textos estáticos de datos:
 ```
-grep -rn "Ritmo:\|inusual\|hace 2m\|09:22\|08:15" lib/presentation/screens/
+grep -rn "Ritmo:\|inusual\|hace 2m\|09:22\|08:15" lib/
 ```
-Si encuentra textos estáticos de datos → deben venir del provider.
+Si encuentra textos estáticos → deben venir del provider o API.
 
 5. Verificar que TasaModel incluye yadioRate:
 ```
 grep -n "yadioRate" lib/data/models/tasa_model.dart
 ```
 
-6. Verificar que el backend tiene fetchYadioRate:
+6. Verificar que el backend tiene datos de Yadio:
 ```
-grep -n "fetchYadioRate\|yadio" backend/src/index.js
+grep -n "yadio" backend/src/index.js
 ```
 
-// turbo
 7. Compilar y verificar:
 ```
 flutter analyze --no-fatal-infos
