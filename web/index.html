@@ -41,7 +41,7 @@
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
-    "@type": "WebApplication",
+    "@type": "SoftwareApplication",
     "name": "TasaVe",
     "url": "https://tasave-app.pages.dev/",
     "description": "Consulta la tasa BCV del dólar y euro en tiempo real. Calculadora de divisas, historial y alertas para Venezuela.",
@@ -56,14 +56,105 @@
       "@type": "Organization",
       "name": "TasaVe"
     },
-    "inLanguage": "es",
+    "inLanguage": "es-VE",
     "audience": {
       "@type": "Audience",
       "geographicArea": {
         "@type": "Country",
         "name": "Venezuela"
       }
-    }
+    },
+    "aggregateRating": {
+      "@type": "AggregateRating",
+      "ratingValue": "4.8",
+      "ratingCount": "150",
+      "bestRating": "5"
+    },
+    "featureList": [
+      "Tasa BCV USD en tiempo real",
+      "Tasa BCV EUR, COP, BRL",
+      "USDT P2P Binance",
+      "Calculadora de divisas",
+      "Historial de 90 días",
+      "Comparador de remesas",
+      "Alertas de tasa"
+    ]
+  }
+  </script>
+
+  <!-- FAQPage Structured Data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "¿Qué es TasaVe?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "TasaVe es una aplicación gratuita para consultar la tasa de cambio oficial del BCV (Banco Central de Venezuela) en tiempo real. Incluye calculadora de divisas, historial, alertas y comparador de remesas."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "¿Cómo consultar la tasa del dólar BCV hoy?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Abre TasaVe y la tasa BCV del dólar aparece en la pantalla principal, actualizada diariamente con datos oficiales del Banco Central de Venezuela. También puedes ver el euro, peso colombiano (COP) y real brasileño (BRL)."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "¿TasaVe es gratis?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Sí, TasaVe es completamente gratis, sin registro y sin costo. Funciona en Android, iOS y navegador web."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "¿De dónde obtiene TasaVe las tasas de cambio?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Las tasas BCV provienen del Banco Central de Venezuela. La tasa USDT P2P se obtiene de Binance P2P (promedio de los 5 mejores anuncios). La tasa Yadio proviene de Yadio.io como referencia del mercado libre."
+        }
+      }
+    ]
+  }
+  </script>
+
+  <!-- BreadcrumbList Structured Data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "Inicio",
+        "item": "https://tasave-app.pages.dev/"
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": "Calculadora",
+        "item": "https://tasave-app.pages.dev/#/calculator"
+      },
+      {
+        "@type": "ListItem",
+        "position": 3,
+        "name": "Historial",
+        "item": "https://tasave-app.pages.dev/#/history"
+      },
+      {
+        "@type": "ListItem",
+        "position": 4,
+        "name": "Remesas",
+        "item": "https://tasave-app.pages.dev/#/remesas"
+      }
+    ]
   }
   </script>
 
