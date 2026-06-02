@@ -133,26 +133,8 @@
       {
         "@type": "ListItem",
         "position": 1,
-        "name": "Inicio",
+        "name": "Tasa BCV Venezuela",
         "item": "https://tasave-app.pages.dev/"
-      },
-      {
-        "@type": "ListItem",
-        "position": 2,
-        "name": "Calculadora",
-        "item": "https://tasave-app.pages.dev/#/calculator"
-      },
-      {
-        "@type": "ListItem",
-        "position": 3,
-        "name": "Historial",
-        "item": "https://tasave-app.pages.dev/#/history"
-      },
-      {
-        "@type": "ListItem",
-        "position": 4,
-        "name": "Remesas",
-        "item": "https://tasave-app.pages.dev/#/remesas"
       }
     ]
   }
@@ -172,24 +154,83 @@
   <link rel="manifest" href="manifest.json">
 </head>
 <body>
-  <!-- Noscript fallback: critical for SEO crawlers that don't execute JS -->
+  <!-- Noscript / SSR fallback — rich content for crawlers and non-JS users -->
   <noscript>
-    <div style="font-family:sans-serif;max-width:600px;margin:40px auto;padding:20px;text-align:center;">
-      <h1>TasaVe - Tasa BCV Venezuela</h1>
-      <p>Consulta la tasa oficial del BCV (Banco Central de Venezuela) para el d&oacute;lar y euro en tiempo real.</p>
-      <h2>Funciones principales</h2>
-      <ul style="text-align:left;">
-        <li><strong>Tasa BCV USD</strong> - D&oacute;lar oficial actualizado diariamente</li>
-        <li><strong>Tasa BCV EUR</strong> - Euro oficial del Banco Central</li>
-        <li><strong>USDT P2P</strong> - Tasa paralela Binance P2P</li>
-        <li><strong>Yadio</strong> - Referencia de mercado libre</li>
-        <li><strong>Calculadora</strong> - Convierte bol&iacute;vares a d&oacute;lares y viceversa</li>
-        <li><strong>Historial</strong> - Gr&aacute;fica de 7, 30 y 90 d&iacute;as</li>
-        <li><strong>Remesas</strong> - Compara plataformas: Zinli, Zelle, Binance P2P, Reserve, PayPal</li>
-        <li><strong>Alertas</strong> - Notificaciones de cambio de tasa y spread inusual</li>
-      </ul>
-      <p>Para usar la aplicaci&oacute;n completa, habilita JavaScript en tu navegador.</p>
-      <p><a href="https://tasave-app.pages.dev/">tasave-app.pages.dev</a></p>
+    <div style="font-family:'DM Sans',system-ui,sans-serif;max-width:700px;margin:0 auto;padding:30px 20px;color:#1a1a1a;background:#fff;">
+      <!-- Hero -->
+      <header style="text-align:center;padding:20px 0;border-bottom:3px solid #E53935;margin-bottom:30px;">
+        <h1 style="font-size:1.8rem;color:#E53935;margin:0;">TasaVe — Tasa BCV Venezuela</h1>
+        <p style="font-size:1.1rem;color:#555;margin:8px 0 0;">Consulta la tasa de cambio del <strong>dólar BCV</strong>, euro, COP y BRL en tiempo real</p>
+        <p style="font-size:0.9rem;color:#888;">📅 Actualizado: 2 de junio de 2026 · Fuente: Banco Central de Venezuela</p>
+      </header>
+
+      <!-- Tasas principales -->
+      <section style="margin-bottom:30px;">
+        <h2 style="font-size:1.3rem;color:#C62828;border-left:4px solid #E53935;padding-left:12px;">💱 Tasas disponibles</h2>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-top:12px;">
+          <div style="background:#FFF0F0;padding:12px;border-radius:8px;text-align:center;">
+            <strong style="display:block;font-size:1.2rem;color:#E53935;">USD / Bs</strong>
+            <span style="font-size:0.85rem;">Dólar BCV oficial</span>
+          </div>
+          <div style="background:#FFF0F0;padding:12px;border-radius:8px;text-align:center;">
+            <strong style="display:block;font-size:1.2rem;color:#E53935;">EUR / Bs</strong>
+            <span style="font-size:0.85rem;">Euro BCV oficial</span>
+          </div>
+          <div style="background:#FFF0F0;padding:12px;border-radius:8px;text-align:center;">
+            <strong style="display:block;font-size:1.2rem;color:#E53935;">COP / Bs</strong>
+            <span style="font-size:0.85rem;">Peso colombiano BCV</span>
+          </div>
+          <div style="background:#FFF0F0;padding:12px;border-radius:8px;text-align:center;">
+            <strong style="display:block;font-size:1.2rem;color:#E53935;">BRL / Bs</strong>
+            <span style="font-size:0.85rem;">Real brasileño BCV</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Funcionalidades -->
+      <section style="margin-bottom:30px;">
+        <h2 style="font-size:1.3rem;color:#C62828;border-left:4px solid #E53935;padding-left:12px;">⚡ Funciones principales</h2>
+        <ul style="line-height:1.8;padding-left:20px;">
+          <li><strong>Tasa BCV USD</strong> — Dólar oficial del Banco Central de Venezuela actualizado diariamente</li>
+          <li><strong>Tasa BCV EUR</strong> — Euro oficial BCV para transferencias y remesas desde Europa</li>
+          <li><strong>Tasa BCV COP</strong> — Peso colombiano BCV, ideal para comercio fronterizo</li>
+          <li><strong>Tasa BCV BRL</strong> — Real brasileño BCV, referencia para el sur de Venezuela</li>
+          <li><strong>USDT P2P (Binance)</strong> — Promedio de los 5 mejores anuncios en Binance P2P</li>
+          <li><strong>Yadio</strong> — Tasa de referencia del mercado libre venezolano</li>
+          <li><strong>Calculadora de divisas</strong> — Convierte bolívares a dólares y viceversa con IVA e IGTF incluidos</li>
+          <li><strong>Historial de tasas</strong> — Gráficas interactivas de 7, 30 y 90 días con tendencias</li>
+          <li><strong>Comparador de remesas</strong> — Zinli, Zelle, Binance P2P, Reserve, PayPal y más</li>
+          <li><strong>Alertas personalizadas</strong> — Notificaciones cuando la tasa cambia o el spread es inusual</li>
+          <li><strong>Escáner de tasas</strong> — Escanea y compara tasas al instante</li>
+          <li><strong>Modo oscuro</strong> — Tema oscuro automático para ahorro de batería</li>
+        </ul>
+      </section>
+
+      <!-- FAQ -->
+      <section style="margin-bottom:30px;">
+        <h2 style="font-size:1.3rem;color:#C62828;border-left:4px solid #E53935;padding-left:12px;">❓ Preguntas frecuentes</h2>
+        <div style="margin-top:12px;">
+          <h3 style="font-size:1rem;color:#333;">¿Qué es la tasa BCV?</h3>
+          <p style="color:#555;margin:4px 0 12px;">Es la tasa de cambio oficial publicada por el Banco Central de Venezuela. Se usa como referencia para transacciones bancarias, remesas y comercio en Venezuela.</p>
+          <h3 style="font-size:1rem;color:#333;">¿Cada cuánto se actualizan las tasas?</h3>
+          <p style="color:#555;margin:4px 0 12px;">La tasa BCV se actualiza diariamente. TasaVe consulta el API del BCV en tiempo real y guarda los datos en caché para acceso offline.</p>
+          <h3 style="font-size:1rem;color:#333;">¿TasaVe es gratis?</h3>
+          <p style="color:#555;margin:4px 0 12px;">Sí, completamente gratis. Sin registro, sin costo. Disponible en Android, iOS y navegador web.</p>
+          <h3 style="font-size:1rem;color:#333;">¿Qué es el USDT P2P?</h3>
+          <p style="color:#555;margin:4px 0 12px;">Es el promedio de los 5 mejores precios de USDT en el mercado P2P de Binance para Venezuela. Sirve como referencia del tipo de cambio paralelo.</p>
+        </div>
+      </section>
+
+      <!-- CTA -->
+      <footer style="text-align:center;padding:25px;background:#FFF0F0;border-radius:12px;margin-bottom:20px;">
+        <p style="font-size:1.1rem;margin:0 0 8px;"><strong>📱 TasaVe funciona en Android, iOS y Web</strong></p>
+        <p style="font-size:0.95rem;color:#555;margin:0 0 12px;">Descarga la app o úsala directamente en tu navegador</p>
+        <a href="https://tasave-app.pages.dev/" style="display:inline-block;background:#E53935;color:#fff;padding:10px 24px;border-radius:6px;text-decoration:none;font-weight:600;">Abrir TasaVe →</a>
+        <p style="font-size:0.8rem;color:#999;margin-top:12px;">
+          Para la experiencia completa, habilita JavaScript en tu navegador.<br>
+          © 2026 TasaVe · tasave-app.pages.dev
+        </p>
+      </footer>
     </div>
   </noscript>
   <script src="flutter_bootstrap.js" async></script>

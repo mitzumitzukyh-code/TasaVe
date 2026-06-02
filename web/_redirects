@@ -1,9 +1,12 @@
-# TasaVe — Cloudflare Pages redirects
+# TasaVe — Cloudflare Pages redirects & routing
 # Docs: https://developers.cloudflare.com/pages/configuration/redirects/
 
-# www → non-www (cuando se añada dominio personalizado)
-https://www.tasave-app.pages.dev/* https://tasave-app.pages.dev/:splat 301
+# SPA fallback — todas las rutas sirven index.html
+/*    /index.html   200
 
 # Force HTTPS
-http://tasave-app.pages.dev/* https://tasave-app.pages.dev/:splat 301
-http://www.tasave-app.pages.dev/* https://tasave-app.pages.dev/:splat 301
+http://tasave-app.pages.dev/*    https://tasave-app.pages.dev/:splat    301
+http://www.tasave-app.pages.dev/*    https://tasave-app.pages.dev/:splat    301
+
+# www → non-www (requiere añadir www.tasave-app.pages.dev como custom domain en Cloudflare Dashboard)
+https://www.tasave-app.pages.dev/*    https://tasave-app.pages.dev/:splat    301
