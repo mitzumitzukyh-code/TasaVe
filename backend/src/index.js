@@ -29,6 +29,16 @@ export default {
     const path = url.pathname;
 
     try {
+      if (url.pathname === '/admin/clear-cache' &&
+          request.method === 'POST') {
+        await env.TASAVE_KV.delete('current_rate');
+        return new Response(
+          JSON.stringify({ ok: true, message: 'Cache cleared' }),
+          { headers: { 'Content-Type': 'application/json',
+            ...CORS_HEADERS } }
+        );
+      }
+
       if (path === '/tasa') {
         return await handleCurrentRate(env);
       }
@@ -157,7 +167,7 @@ async function fetchAndStoreRate(env) {
     const [usdtP2P, yadioRate, extraRates] = await Promise.all([
       fetchUsdtP2P(),
       fetchYadioRate(),
-      fetchExtraRatesFromBcv(),
+      fetchExtraRatesFromBcv(rates.bcvUsd),
     ]);
 
     const rateData = {
@@ -325,27 +335,65 @@ async function fetchUsdtP2P() {
   }
 }
 
-async function fetchExtraRatesFromBcv() {
+async function fetchExtraRatesFromBcv(bcvUsdParam) {
   try {
-    // DolarAPI provee tasas BCV para múltiples monedas
-    const currencies = ['cop', 'brl', 'cny', 'try', 'rub'];
-    const results = await Promise.allSettled(
-      currencies.map(c =>
-        fetch(`https://ve.dolarapi.com/v1/dolares/${c}`, {
-          headers: { 'Accept': 'application/json' },
-        }).then(r => r.ok ? r.json() : null).catch(() => null)
-      )
-    );
+    const res = await fetch('https://www.bcv.org.ve/', {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (compatible; TasaVeBot/1.0)',
+        'Accept': 'text/html',
+      },
+      cf: { cacheTtl: 0 },
+    });
+    if (!res.ok) return { bcvCop: null, bcvBrl: null,
+      bcvCny: null, bcvTry: null, bcvRub: null };
 
-    const [cop, brl, cny, tryRate, rub] = results.map(r =>
-      r.status === 'fulfilled' && r.value?.promedio
-        ? roundTwo(r.value.promedio)
-        : null
-    );
+    const html = await res.text();
 
-    return { bcvCop: cop, bcvBrl: brl, bcvCny: cny, bcvTry: tryRate, bcvRub: rub };
+    // BCV muestra tasas para: dolar, euro, yuan, lira, rublo.
+    // COP (peso) y BRL (real) NO están disponibles en bcv.org.ve.
+    // El HTML usa <strong class="strong-tb"> con salto de línea.
+    function extractBcv(id) {
+      const regex = new RegExp(
+        `id="${id}"[\\s\\S]*?<strong[^>]*>\\s*([\\d,\\.]+)`,
+        'i'
+      );
+      const match = html.match(regex);
+      if (!match) return null;
+      const raw = match[1].replace(/\./g, '').replace(',', '.');
+      const val = parseFloat(raw);
+      return isNaN(val) || val <= 0 ? null : roundTwo(val);
+    }
+
+    // COP y BRL vía cruce USD con open.er-api.com
+    let bcvCop = null;
+    let bcvBrl = null;
+    try {
+      const erRes = await fetch(
+        'https://open.er-api.com/v6/latest/USD',
+        { cf: { cacheTtl: 3600 } }
+      );
+      if (erRes.ok) {
+        const erData = await erRes.json();
+        const erRates = erData.rates;
+        if (erRates?.COP && erRates.COP > 0 && bcvUsdParam > 0) {
+          bcvCop = roundTwo(bcvUsdParam / erRates.COP);
+        }
+        if (erRates?.BRL && erRates.BRL > 0 && bcvUsdParam > 0) {
+          bcvBrl = roundTwo(bcvUsdParam / erRates.BRL);
+        }
+      }
+    } catch { /* null fallback */ }
+
+    return {
+      bcvCop: bcvCop,
+      bcvBrl: bcvBrl,
+      bcvCny: extractBcv('yuan'),
+      bcvTry: extractBcv('lira'),
+      bcvRub: extractBcv('rublo'),
+    };
   } catch {
-    return null;
+    return { bcvCop: null, bcvBrl: null,
+      bcvCny: null, bcvTry: null, bcvRub: null };
   }
 }
 

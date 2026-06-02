@@ -1,5 +1,5 @@
-name: calculaya
-description: Calculadora de cambio BCV para Venezuela
+name: tasave
+description: TasaVe — App para consultar la tasa de cambio BCV de Venezuela
 publish_to: 'none'
 version: 1.0.0+1
 

@@ -1,0 +1,1596 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="description" content="TasaVe — Consulta la tasa de cambio BCV de Venezuela en tiempo real con convertidor y scanner de precios.">
+  <title>TasaVe — Tasa BCV Venezuela</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    /* ===================================================
+       DESIGN SYSTEM — TASAVE PALETTE (INMUTABLE)
+    =================================================== */
+    :root {
+      --primary:      #E53935;
+      --primary-drk:  #C62828;
+      --primary-lgt:  #FFF0F0;
+      --bg:           #FFFFFF;
+      --surface:      #F5F5F5;
+      --surface2:     #EEEEEE;
+      --text:         #1A1A1A;
+      --text-2:       #616161;
+      --text-3:       #9E9E9E;
+      --border:       rgba(0,0,0,0.07);
+      --shadow-sm:    0 1px 3px rgba(0,0,0,0.08),0 1px 2px rgba(0,0,0,0.04);
+      --shadow-md:    0 4px 12px rgba(0,0,0,0.08),0 2px 4px rgba(0,0,0,0.04);
+      --shadow-lg:    0 12px 32px rgba(0,0,0,0.10),0 4px 8px rgba(0,0,0,0.05);
+      --radius-s:  8px;
+      --radius-m:  12px;
+      --radius-l:  16px;
+      --radius-xl: 24px;
+      --font-body: 'DM Sans', system-ui, sans-serif;
+      --font-mono: 'Space Mono', monospace;
+      --nav-h:     68px;
+      --hdr-h:     62px;
+      --ease:      cubic-bezier(0.4,0,0.2,1);
+    }
+
+    /* ===================================================
+       RESET
+    =================================================== */
+    *, *::before, *::after {
+      box-sizing: border-box; margin: 0; padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+    html { height: 100%; background: #E8E8E8; }
+    body {
+      height: 100%; font-family: var(--font-body);
+      font-size: 16px; line-height: 1.5; color: var(--text);
+      -webkit-font-smoothing: antialiased;
+      background: linear-gradient(145deg, #f0f0f0 0%, #e4e4e4 100%);
+    }
+
+    /* ===================================================
+       APP SHELL — phone container on desktop
+    =================================================== */
+    #app {
+      position: fixed; inset: 0;
+      display: flex; flex-direction: column;
+      background: var(--bg);
+      overflow: hidden;
+      max-width: 430px;
+      margin: 0 auto;
+    }
+    @media (min-height: 700px) and (min-width: 500px) {
+      #app {
+        inset: auto;
+        position: absolute;
+        top: 50%; left: 50%;
+        transform: translate(-50%, -50%);
+        width: 390px; height: 844px;
+        border-radius: 44px;
+        box-shadow: 0 0 0 10px #1a1a1a, 0 30px 80px rgba(0,0,0,0.4), 0 0 0 11px #333;
+        overflow: hidden;
+      }
+      #app::before {
+        content: '';
+        position: absolute; top: 0; left: 50%;
+        transform: translateX(-50%);
+        width: 120px; height: 30px;
+        background: #1a1a1a;
+        border-radius: 0 0 20px 20px;
+        z-index: 9999;
+      }
+    }
+
+    /* ===================================================
+       HEADER
+    =================================================== */
+    .hdr {
+      height: var(--hdr-h);
+      display: flex; align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+      position: relative;
+      z-index: 50;
+    }
+    .hdr-logo { display: flex; align-items: center; gap: 9px; }
+    .logo-mark {
+      width: 32px; height: 32px;
+      background: linear-gradient(135deg, var(--primary), var(--primary-drk));
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 3px 10px rgba(229,57,53,0.35);
+    }
+    .logo-mark svg { width: 18px; height: 18px; fill: white; }
+    .logo-name {
+      font-size: 21px; font-weight: 700; letter-spacing: -0.6px;
+    }
+    .logo-name b { color: var(--primary); font-weight: 700; }
+    .hdr-btns { display: flex; gap: 8px; }
+    .icon-btn {
+      width: 36px; height: 36px; border-radius: 10px;
+      border: none; background: var(--surface);
+      color: var(--text); cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: all .15s var(--ease);
+    }
+    .icon-btn:hover { background: var(--surface2); }
+    .icon-btn:active { transform: scale(0.90); }
+    .icon-btn svg { width: 17px; height: 17px; }
+
+    /* ===================================================
+       CONTENT SCROLL
+    =================================================== */
+    .content {
+      flex: 1; overflow-y: auto; overflow-x: hidden;
+      -webkit-overflow-scrolling: touch;
+      scroll-behavior: smooth;
+    }
+    .content::-webkit-scrollbar { display: none; }
+
+    /* ===================================================
+       SCREENS
+    =================================================== */
+    .screen { display: none; animation: fadeUp .25s var(--ease); }
+    .screen.active { display: block; }
+    #screen-scanner.active { display: flex; flex-direction: column; height: 100%; }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ===================================================
+       BOTTOM NAV
+    =================================================== */
+    .nav {
+      height: var(--nav-h);
+      display: flex; align-items: stretch;
+      background: var(--bg);
+      border-top: 1px solid var(--border);
+      flex-shrink: 0;
+      padding-bottom: env(safe-area-inset-bottom, 0);
+    }
+    .ni {
+      flex: 1; display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 3px; border: none; background: none;
+      color: var(--text-3); cursor: pointer;
+      border-radius: 0; padding: 6px 4px;
+      transition: color .15s var(--ease); position: relative;
+    }
+    .ni svg { width: 22px; height: 22px; stroke-width: 1.8; }
+    .ni span { font-size: 10px; font-weight: 500; }
+    .ni.active { color: var(--primary); }
+    .ni.active svg { stroke-width: 2.3; }
+    .ni-dot {
+      position: absolute; top: 6px;
+      width: 4px; height: 4px;
+      background: var(--primary);
+      border-radius: 50%;
+      opacity: 0; transition: opacity .2s;
+    }
+    .ni.active .ni-dot { opacity: 1; }
+    /* Scanner FAB button */
+    .ni-scan {
+      flex: 0 0 72px; flex-direction: column;
+      align-items: center; justify-content: center;
+    }
+    .scan-fab {
+      width: 50px; height: 50px;
+      background: linear-gradient(135deg, var(--primary), var(--primary-drk));
+      border-radius: 16px;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 4px 14px rgba(229,57,53,0.40);
+      transition: all .18s var(--ease);
+    }
+    .scan-fab svg { width: 24px; height: 24px; stroke: white; stroke-width: 2; fill: none; }
+    .ni-scan.active .scan-fab {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(229,57,53,0.50);
+    }
+    .ni-scan.active span { color: var(--primary); }
+    .ni-scan span { color: var(--text-3); font-size: 10px; font-weight: 500; margin-top: 3px; }
+
+    /* ===================================================
+       SHARED UTILITIES
+    =================================================== */
+    .pad { padding: 16px; }
+    .row { display: flex; align-items: center; }
+    .sec-lbl {
+      font-size: 11.5px; font-weight: 700;
+      color: var(--text-3); text-transform: uppercase; letter-spacing: 0.9px;
+    }
+    .sec-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+    .gap-sm { gap: 8px; }
+    .mb { margin-bottom: 16px; }
+    .card {
+      background: var(--surface); border-radius: var(--radius-l);
+      padding: 16px;
+    }
+    .card-border {
+      background: var(--bg); border: 1px solid var(--border);
+      border-radius: var(--radius-l); padding: 16px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    /* Empty state */
+    .empty {
+      display: flex; flex-direction: column;
+      align-items: center; padding: 36px 16px; gap: 8px;
+      color: var(--text-3); text-align: center;
+    }
+    .empty svg { width: 44px; height: 44px; opacity: 0.35; }
+    .empty p { font-size: 14px; font-weight: 500; color: var(--text-2); }
+    .empty small { font-size: 12px; }
+
+    /* Toast */
+    #toast {
+      position: fixed;
+      bottom: calc(var(--nav-h) + 12px);
+      left: 50%; transform: translateX(-50%) translateY(16px);
+      background: #1A1A1A; color: #fff;
+      padding: 9px 18px; border-radius: 100px;
+      font-size: 13px; font-weight: 500;
+      opacity: 0; pointer-events: none; white-space: nowrap;
+      transition: all .28s var(--ease); z-index: 9000;
+    }
+    #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    /* Spinning */
+    .spin { animation: spin 1s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Toggle switch */
+    .toggle {
+      width: 42px; height: 24px; border-radius: 12px;
+      background: var(--surface2); border: none;
+      cursor: pointer; position: relative;
+      transition: background .2s var(--ease); flex-shrink: 0;
+    }
+    .toggle::after {
+      content: ''; position: absolute;
+      width: 18px; height: 18px; border-radius: 50%;
+      background: white; top: 3px; left: 3px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+      transition: left .2s var(--ease);
+    }
+    .toggle.on { background: var(--primary); }
+    .toggle.on::after { left: 21px; }
+
+    /* Primary button */
+    .btn-primary {
+      width: 100%; padding: 13px;
+      background: linear-gradient(135deg, var(--primary), var(--primary-drk));
+      color: white; border: none; border-radius: var(--radius-s);
+      font-family: var(--font-body); font-size: 14px; font-weight: 600;
+      cursor: pointer; display: flex; align-items: center;
+      justify-content: center; gap: 6px;
+      transition: transform .15s var(--ease), box-shadow .15s;
+      box-shadow: 0 3px 10px rgba(229,57,53,0.3);
+    }
+    .btn-primary:active { transform: scale(0.97); box-shadow: none; }
+    .btn-primary svg { width: 17px; height: 17px; }
+
+    /* Input base */
+    .input {
+      width: 100%; padding: 11px 13px;
+      background: var(--bg); border: 1.5px solid var(--border);
+      border-radius: var(--radius-s); outline: none;
+      font-family: var(--font-mono); font-size: 15px; color: var(--text);
+      transition: border-color .15s, box-shadow .15s;
+    }
+    .input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(229,57,53,0.10);
+    }
+    .input.text-font { font-family: var(--font-body); font-size: 14px; }
+    .input-label {
+      font-size: 10.5px; font-weight: 700; color: var(--text-3);
+      text-transform: uppercase; letter-spacing: 0.7px;
+      display: block; margin-bottom: 5px;
+    }
+
+    /* ===================================================
+       HOME — RATE CARD
+    =================================================== */
+    .rate-card {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-drk) 100%);
+      border-radius: var(--radius-xl); padding: 22px 22px 20px;
+      color: white; position: relative; overflow: hidden;
+      margin: 16px 16px 0;
+      box-shadow: 0 8px 28px rgba(229,57,53,0.32);
+    }
+    .rate-card::before {
+      content: ''; position: absolute;
+      top: -50px; right: -50px;
+      width: 180px; height: 180px;
+      background: rgba(255,255,255,0.07);
+      border-radius: 50%;
+    }
+    .rate-card::after {
+      content: ''; position: absolute;
+      bottom: -70px; left: -30px;
+      width: 220px; height: 220px;
+      background: rgba(255,255,255,0.04);
+      border-radius: 50%;
+    }
+    .rate-src {
+      font-size: 10px; font-weight: 700; letter-spacing: 1.4px;
+      opacity: 0.55; text-transform: uppercase;
+      position: absolute; top: 18px; right: 20px;
+    }
+    .rate-lbl {
+      font-size: 12px; font-weight: 500;
+      opacity: 0.72; text-transform: uppercase;
+      letter-spacing: 0.8px; margin-bottom: 6px;
+    }
+    .rate-main {
+      display: flex; align-items: baseline; gap: 6px; margin-bottom: 2px;
+    }
+    .rate-num {
+      font-family: var(--font-mono); font-size: 44px;
+      font-weight: 700; line-height: 1; letter-spacing: -2px;
+    }
+    .rate-cur { font-size: 17px; opacity: 0.65; }
+    .rate-footer {
+      display: flex; align-items: center;
+      justify-content: space-between; margin-top: 14px;
+    }
+    .rate-badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      background: rgba(255,255,255,0.15);
+      border-radius: 20px; padding: 4px 10px;
+      font-size: 12px; font-weight: 600;
+    }
+    .rate-badge.green { background: rgba(76,175,80,0.25); }
+    .rate-badge svg { width: 11px; height: 11px; }
+    .rate-upd { font-size: 11px; opacity: 0.55; }
+
+    /* ===================================================
+       HOME — CONVERTER (inline)
+    =================================================== */
+    .conv-wrap {
+      margin: 14px 16px 0; background: var(--surface);
+      border-radius: var(--radius-l); padding: 4px;
+    }
+    .conv-inner { position: relative; }
+    .conv-field {
+      background: var(--bg); border-radius: var(--radius-m);
+      padding: 13px 15px; display: flex;
+      align-items: center; gap: 12px; margin-bottom: 4px;
+    }
+    .conv-field:last-child { margin-bottom: 0; }
+    .conv-flag {
+      width: 34px; height: 34px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px; flex-shrink: 0;
+      background: var(--surface); box-shadow: var(--shadow-sm);
+    }
+    .conv-ccy { font-size: 11px; font-weight: 600; color: var(--text-3); margin-bottom: 2px; }
+    .conv-input {
+      font-family: var(--font-mono); font-size: 21px; font-weight: 700;
+      color: var(--text); border: none; background: transparent;
+      width: 100%; outline: none; min-width: 0;
+    }
+    .conv-input::placeholder { color: #BDBDBD; font-weight: 400; }
+    .conv-result {
+      font-family: var(--font-mono); font-size: 21px;
+      font-weight: 700; color: var(--primary);
+    }
+    .conv-result.dim { color: var(--text-3); font-weight: 400; }
+    .swap-btn {
+      position: absolute; left: 50%; top: 50%;
+      transform: translate(-50%, -50%);
+      width: 34px; height: 34px; border-radius: 50%;
+      border: 3px solid var(--surface);
+      background: var(--bg); cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      color: var(--primary); box-shadow: var(--shadow-sm);
+      transition: all .18s var(--ease); z-index: 5;
+    }
+    .swap-btn:hover { background: var(--primary-lgt); }
+    .swap-btn:active { transform: translate(-50%, -50%) rotate(180deg) scale(0.88); }
+    .swap-btn svg { width: 16px; height: 16px; }
+
+    /* Quick amounts */
+    .quick-grid {
+      display: grid; grid-template-columns: repeat(4, 1fr);
+      gap: 8px; margin: 12px 16px 0;
+    }
+    .quick-chip {
+      background: var(--surface); border: 1.5px solid transparent;
+      border-radius: var(--radius-s); padding: 9px 6px;
+      text-align: center; cursor: pointer;
+      transition: all .15s var(--ease);
+    }
+    .quick-chip:hover { border-color: var(--primary); background: var(--primary-lgt); }
+    .quick-chip:active { transform: scale(0.93); }
+    .qc-amt { font-family: var(--font-mono); font-size: 12.5px; font-weight: 700; }
+    .qc-conv { font-size: 9.5px; color: var(--text-3); margin-top: 2px; }
+
+    /* Taxes row */
+    .tax-row {
+      margin: 12px 16px 0; display: grid;
+      grid-template-columns: 1fr 1fr; gap: 8px;
+    }
+    .tax-cell {
+      background: var(--surface); border-radius: var(--radius-m); padding: 12px;
+    }
+    .tax-lbl {
+      font-size: 10.5px; font-weight: 700; color: var(--text-3);
+      text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 5px;
+    }
+    .tax-val {
+      font-family: var(--font-mono); font-size: 15px; font-weight: 700; color: var(--text);
+    }
+    .tax-sub { font-size: 10px; color: var(--text-3); margin-top: 2px; }
+
+    /* Stats 2x2 */
+    .stats-grid {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 8px; margin: 12px 16px 16px;
+    }
+    .stat-cell {
+      background: var(--surface); border-radius: var(--radius-m); padding: 13px;
+    }
+    .stat-lbl { font-size: 10.5px; font-weight: 700; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 5px; }
+    .stat-val { font-family: var(--font-mono); font-size: 17px; font-weight: 700; color: var(--text); }
+    .stat-sub { font-size: 10px; color: var(--text-3); margin-top: 2px; }
+
+    /* ===================================================
+       SCANNER SCREEN
+    =================================================== */
+    .scanner-vf {
+      position: relative; height: 230px; flex-shrink: 0;
+      background: #0d0d0d; overflow: hidden;
+      display: flex; align-items: center; justify-content: center;
+    }
+    #cam-video {
+      position: absolute; inset: 0;
+      width: 100%; height: 100%;
+      object-fit: cover; display: none;
+    }
+    .vf-overlay {
+      position: absolute; inset: 0;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 14px;
+    }
+    .vf-frame {
+      width: 210px; height: 72px; position: relative;
+    }
+    /* Corner marks */
+    .vf-frame::before, .vf-frame::after,
+    .vf-corner-bl, .vf-corner-br {
+      content: ''; position: absolute;
+      width: 22px; height: 22px;
+      border-color: var(--primary); border-style: solid;
+    }
+    .vf-frame::before { top: 0; left: 0; border-width: 3px 0 0 3px; border-radius: 3px 0 0 0; }
+    .vf-frame::after  { top: 0; right: 0; border-width: 3px 3px 0 0; border-radius: 0 3px 0 0; }
+    .vf-corner-bl { content: ''; position: absolute; bottom: 0; left: 0; border-width: 0 0 3px 3px; border-radius: 0 0 0 3px; }
+    .vf-corner-br { content: ''; position: absolute; bottom: 0; right: 0; border-width: 0 3px 3px 0; border-radius: 0 0 3px 0; }
+    .vf-line {
+      position: absolute; left: 6px; right: 6px; height: 2px;
+      background: linear-gradient(90deg, transparent 0%, var(--primary) 30%, var(--primary) 70%, transparent 100%);
+      animation: scan 2.2s ease-in-out infinite;
+      top: 0; border-radius: 1px;
+      box-shadow: 0 0 8px rgba(229,57,53,0.7);
+    }
+    @keyframes scan {
+      0%   { top: 4px; opacity: 0; }
+      10%  { opacity: 1; }
+      90%  { opacity: 1; }
+      100% { top: calc(100% - 4px); opacity: 0; }
+    }
+    .vf-hint {
+      font-size: 12px; color: rgba(255,255,255,0.55);
+      text-align: center; letter-spacing: 0.3px;
+    }
+    .vf-no-cam {
+      display: flex; flex-direction: column;
+      align-items: center; gap: 8px;
+      color: rgba(255,255,255,0.3);
+    }
+    .vf-no-cam svg { width: 38px; height: 38px; }
+    .vf-no-cam span { font-size: 12px; }
+    .cam-btn {
+      position: absolute; top: 10px; right: 10px;
+      background: rgba(0,0,0,0.55); border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 8px; padding: 7px 10px;
+      color: rgba(255,255,255,0.85); cursor: pointer;
+      font-size: 11px; font-family: var(--font-body); font-weight: 500;
+      display: flex; align-items: center; gap: 5px;
+      transition: background .15s;
+    }
+    .cam-btn:hover { background: rgba(0,0,0,0.75); }
+    .cam-btn svg { width: 14px; height: 14px; }
+
+    /* Scanner body */
+    .scanner-body {
+      flex: 1; overflow-y: auto; padding: 14px;
+      background: var(--bg);
+    }
+    .scanner-body::-webkit-scrollbar { display: none; }
+
+    /* Price input card */
+    .pin-card {
+      background: var(--surface); border-radius: var(--radius-l);
+      padding: 14px; margin-bottom: 14px;
+    }
+    .pin-row { display: flex; gap: 8px; margin-bottom: 10px; }
+    .pin-preview {
+      display: none; background: var(--primary-lgt);
+      border-radius: var(--radius-s); padding: 9px 12px;
+      align-items: center; justify-content: space-between;
+      margin-bottom: 10px;
+    }
+    .pin-preview.show { display: flex; }
+    .pin-preview-lbl { font-size: 12px; color: var(--primary); font-weight: 500; }
+    .pin-preview-val { font-family: var(--font-mono); font-size: 16px; font-weight: 700; color: var(--primary); }
+
+    /* Cart items */
+    .cart-item {
+      display: flex; align-items: center; gap: 11px;
+      padding: 11px 12px;
+      background: var(--surface); border-radius: var(--radius-m);
+      margin-bottom: 8px;
+      animation: itemIn .2s var(--ease);
+    }
+    @keyframes itemIn {
+      from { opacity: 0; transform: translateY(-6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .ci-icon {
+      width: 36px; height: 36px; border-radius: 10px;
+      background: var(--primary-lgt); color: var(--primary);
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .ci-icon svg { width: 17px; height: 17px; }
+    .ci-info { flex: 1; min-width: 0; }
+    .ci-name { font-size: 13px; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .ci-ves { font-family: var(--font-mono); font-size: 10.5px; color: var(--text-3); margin-top: 1px; }
+    .ci-usd { font-family: var(--font-mono); font-size: 15px; font-weight: 700; color: var(--primary); flex-shrink: 0; }
+    .ci-del {
+      width: 28px; height: 28px; border-radius: 8px; border: none;
+      background: transparent; color: var(--text-3); cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: all .15s; flex-shrink: 0;
+    }
+    .ci-del:hover { background: #FFEBEE; color: var(--primary); }
+    .ci-del svg { width: 15px; height: 15px; }
+
+    /* Cart total */
+    .cart-total {
+      background: linear-gradient(135deg, var(--primary), var(--primary-drk));
+      border-radius: var(--radius-l); padding: 16px; color: white;
+      margin-top: 6px; display: none;
+    }
+    .ct-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 3px; }
+    .ct-lbl { font-size: 12px; opacity: 0.75; font-weight: 500; }
+    .ct-val { font-family: var(--font-mono); font-size: 16px; font-weight: 700; }
+    .ct-div { border: none; border-top: 1px solid rgba(255,255,255,0.2); margin: 10px 0; }
+    .ct-main-lbl { font-size: 12px; opacity: 0.75; font-weight: 500; margin-bottom: 2px; }
+    .ct-main-val { font-family: var(--font-mono); font-size: 30px; font-weight: 700; letter-spacing: -1px; }
+
+    /* ===================================================
+       HISTORY SCREEN
+    =================================================== */
+    .hist-filters {
+      display: flex; gap: 6px; padding: 16px 16px 0;
+    }
+    .hf-chip {
+      flex: 1; background: var(--surface);
+      border: 1.5px solid transparent; border-radius: var(--radius-s);
+      padding: 8px 4px; font-size: 13px; font-weight: 700;
+      color: var(--text-3); cursor: pointer; text-align: center;
+      transition: all .15s var(--ease);
+    }
+    .hf-chip.active { background: var(--primary-lgt); border-color: var(--primary); color: var(--primary); }
+    .chart-card {
+      margin: 12px 16px 0; background: var(--surface);
+      border-radius: var(--radius-l); padding: 14px;
+    }
+    .chart-wrap { height: 190px; position: relative; }
+    .hist-stats {
+      display: grid; grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px; margin: 10px 16px 0;
+    }
+    .hs-cell {
+      background: var(--surface); border-radius: var(--radius-m);
+      padding: 11px; text-align: center;
+    }
+    .hs-lbl { font-size: 10px; font-weight: 700; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 4px; }
+    .hs-val { font-family: var(--font-mono); font-size: 15px; font-weight: 700; }
+    .hist-list { padding: 10px 16px 16px; }
+    .hr-item {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 9px 12px; background: var(--surface);
+      border-radius: var(--radius-s); margin-bottom: 6px;
+    }
+    .hr-date { font-size: 12.5px; color: var(--text-2); }
+    .hr-rate { font-family: var(--font-mono); font-size: 14px; font-weight: 700; }
+    .hr-delta { font-family: var(--font-mono); font-size: 11.5px; font-weight: 600; }
+
+    /* ===================================================
+       ALERTS SCREEN
+    =================================================== */
+    .alert-create {
+      margin: 16px 16px 0; background: var(--surface);
+      border-radius: var(--radius-l); padding: 14px;
+    }
+    .type-toggle {
+      display: flex; background: var(--surface2);
+      border-radius: var(--radius-s); padding: 3px; margin-bottom: 12px;
+    }
+    .tt-opt {
+      flex: 1; padding: 8px; border: none; background: transparent;
+      border-radius: 6px; font-size: 12.5px; font-weight: 600;
+      color: var(--text-3); cursor: pointer;
+      transition: all .15s var(--ease);
+    }
+    .tt-opt.active { background: var(--bg); color: var(--text); box-shadow: var(--shadow-sm); }
+    .alert-create-row { display: flex; gap: 8px; align-items: flex-end; }
+    .create-btn {
+      background: var(--primary); color: white;
+      border: none; border-radius: var(--radius-s);
+      padding: 0 14px; height: 43px; white-space: nowrap;
+      font-family: var(--font-body); font-size: 13px; font-weight: 600;
+      cursor: pointer; display: flex; align-items: center; gap: 5px;
+      transition: transform .15s; box-shadow: 0 3px 10px rgba(229,57,53,0.3);
+    }
+    .create-btn:active { transform: scale(0.95); }
+    .create-btn svg { width: 15px; height: 15px; }
+    .alert-item {
+      display: flex; align-items: center; gap: 11px;
+      padding: 13px; background: var(--surface);
+      border-radius: var(--radius-m); margin-bottom: 8px;
+      animation: itemIn .2s var(--ease);
+    }
+    .ai-icon {
+      width: 40px; height: 40px; border-radius: 12px;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .ai-icon.above { background: #FFF3E0; color: #E65100; }
+    .ai-icon.below { background: #E8F5E9; color: #2E7D32; }
+    .ai-icon svg { width: 19px; height: 19px; }
+    .ai-info { flex: 1; }
+    .ai-dir { font-size: 11px; font-weight: 700; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.5px; }
+    .ai-thr { font-family: var(--font-mono); font-size: 17px; font-weight: 700; }
+
+    /* ===================================================
+       SETTINGS SCREEN
+    =================================================== */
+    .premium-card {
+      margin: 16px 16px 0;
+      background: linear-gradient(135deg, #181818 0%, #2a2a2a 100%);
+      border-radius: var(--radius-l); padding: 20px;
+      position: relative; overflow: hidden;
+    }
+    .premium-card::before {
+      content: ''; position: absolute;
+      top: -40px; right: -40px;
+      width: 130px; height: 130px;
+      background: rgba(229,57,53,0.12); border-radius: 50%;
+    }
+    .pm-badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      background: linear-gradient(135deg, #FFD700, #FFAB00);
+      color: #111; padding: 3px 10px; border-radius: 20px;
+      font-size: 10.5px; font-weight: 800; letter-spacing: 0.5px;
+      margin-bottom: 10px;
+    }
+    .pm-title { font-size: 21px; font-weight: 800; color: white; margin-bottom: 5px; letter-spacing: -0.5px; }
+    .pm-sub { font-size: 13px; color: rgba(255,255,255,0.55); margin-bottom: 14px; }
+    .pm-features { display: flex; flex-direction: column; gap: 7px; margin-bottom: 16px; }
+    .pm-feat {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 13px; color: rgba(255,255,255,0.8);
+    }
+    .pm-feat svg { width: 16px; height: 16px; color: #FFD700; flex-shrink: 0; }
+    .pm-btn {
+      width: 100%; padding: 13px;
+      background: linear-gradient(135deg, var(--primary), var(--primary-drk));
+      color: white; border: none; border-radius: var(--radius-s);
+      font-family: var(--font-body); font-size: 15px; font-weight: 700;
+      cursor: pointer; transition: transform .15s;
+    }
+    .pm-btn:active { transform: scale(0.98); }
+    .settings-group {
+      margin: 14px 16px 0; background: var(--surface);
+      border-radius: var(--radius-l); overflow: hidden;
+    }
+    .settings-group + .settings-group { margin-top: 8px; }
+    .si {
+      display: flex; align-items: center; gap: 12px;
+      padding: 13px 15px; border-bottom: 1px solid var(--border);
+      cursor: pointer; transition: background .12s;
+    }
+    .si:last-child { border-bottom: none; }
+    .si:active { background: var(--surface2); }
+    .si-icon {
+      width: 34px; height: 34px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .si-icon svg { width: 17px; height: 17px; }
+    .si-icon.red    { background: var(--primary-lgt); color: var(--primary); }
+    .si-icon.blue   { background: #E3F2FD; color: #1565C0; }
+    .si-icon.green  { background: #E8F5E9; color: #2E7D32; }
+    .si-icon.orange { background: #FFF3E0; color: #E65100; }
+    .si-icon.purple { background: #F3E5F5; color: #6A1B9A; }
+    .si-info { flex: 1; }
+    .si-title { font-size: 14.5px; font-weight: 500; }
+    .si-sub { font-size: 12px; color: var(--text-3); margin-top: 1px; }
+    .si-chev { width: 15px; height: 15px; color: var(--text-3); }
+    .ver-tag {
+      text-align: center; font-size: 11px; color: var(--text-3);
+      padding: 16px 16px 20px;
+    }
+  </style>
+</head>
+<body>
+<div id="app">
+
+  <!-- HEADER -->
+  <header class="hdr">
+    <div class="hdr-logo">
+      <div class="logo-mark">
+        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 14.93V18h-2v-1.07C9.44 16.59 8 15.41 8 14h2c0 .55.9 1 2 1s2-.45 2-1c0-.62-.57-1-2-1-2.21 0-4-1.12-4-3 0-1.41 1.44-2.59 3-2.93V6h2v1.07C14.56 7.41 16 8.59 16 10h-2c0-.55-.9-1-2-1s-2 .45-2 1c0 .62.57 1 2 1 2.21 0 4 1.12 4 3 0 1.41-1.44 2.59-3 2.93z"/></svg>
+      </div>
+      <div class="logo-name">Tasa<b>Ve</b></div>
+    </div>
+    <div class="hdr-btns">
+      <button class="icon-btn" id="refresh-btn" title="Actualizar tasa">
+        <svg id="ref-ico" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5A10 10 0 0 1 20.5 7M22 12.5A10 10 0 0 1 3.5 17"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- CONTENT -->
+  <div class="content">
+
+    <!-- ═══════════ HOME ═══════════ -->
+    <section id="screen-home" class="screen active">
+      <!-- Rate Card -->
+      <div class="rate-card">
+        <div class="rate-src">BCV OFICIAL</div>
+        <div class="rate-lbl">Dólar estadounidense · USD</div>
+        <div class="rate-main">
+          <span class="rate-num" id="rate-num">—</span>
+          <span class="rate-cur">Bs.</span>
+        </div>
+        <div class="rate-footer">
+          <span class="rate-badge" id="rate-badge">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+            <span id="rate-chg">—</span>
+          </span>
+          <span class="rate-upd" id="rate-upd">Cargando…</span>
+        </div>
+      </div>
+
+      <!-- Converter -->
+      <div style="padding:12px 16px 0">
+        <div class="sec-row"><span class="sec-lbl">Convertidor</span></div>
+      </div>
+      <div class="conv-wrap">
+        <div class="conv-inner">
+          <div class="conv-field">
+            <div class="conv-flag" id="from-flag">🇺🇸</div>
+            <div style="flex:1;min-width:0">
+              <div class="conv-ccy" id="from-ccy">USD — Dólar</div>
+              <input class="conv-input" id="amt-input" type="number" placeholder="0.00" inputmode="decimal" autocomplete="off">
+            </div>
+          </div>
+          <button class="swap-btn" id="swap-btn" title="Invertir">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+          </button>
+          <div class="conv-field" style="margin-bottom:0">
+            <div class="conv-flag" id="to-flag">🇻🇪</div>
+            <div style="flex:1;min-width:0">
+              <div class="conv-ccy" id="to-ccy">VES — Bolívar</div>
+              <div class="conv-result dim" id="conv-result">—</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick amounts -->
+      <div class="quick-grid" id="quick-grid"></div>
+
+      <!-- Taxes -->
+      <div class="tax-row">
+        <div class="tax-cell">
+          <div class="tax-lbl">Con IVA (16%)</div>
+          <div class="tax-val" id="t-iva">—</div>
+          <div class="tax-sub" id="t-iva-b"></div>
+        </div>
+        <div class="tax-cell">
+          <div class="tax-lbl">Con IGTF (3%)</div>
+          <div class="tax-val" id="t-igtf">—</div>
+          <div class="tax-sub" id="t-igtf-b"></div>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div style="padding:12px 16px 0"><div class="sec-row"><span class="sec-lbl">Referencia</span></div></div>
+      <div class="stats-grid">
+        <div class="stat-cell"><div class="stat-lbl">Ayer</div><div class="stat-val" id="s-yesterday">—</div><div class="stat-sub">Bs/USD</div></div>
+        <div class="stat-cell"><div class="stat-lbl">Hace 7 días</div><div class="stat-val" id="s-week">—</div><div class="stat-sub">Bs/USD</div></div>
+        <div class="stat-cell"><div class="stat-lbl">Mín. 30d</div><div class="stat-val" id="s-min">—</div><div class="stat-sub">Bs/USD</div></div>
+        <div class="stat-cell"><div class="stat-lbl">Máx. 30d</div><div class="stat-val" id="s-max">—</div><div class="stat-sub">Bs/USD</div></div>
+      </div>
+    </section>
+
+    <!-- ═══════════ SCANNER ═══════════ -->
+    <section id="screen-scanner" class="screen">
+      <!-- Viewfinder -->
+      <div class="scanner-vf">
+        <video id="cam-video" autoplay playsinline muted></video>
+        <div id="vf-no-cam" class="vf-no-cam">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+          <span>Modo manual</span>
+        </div>
+        <div class="vf-overlay">
+          <div class="vf-frame">
+            <div class="vf-line"></div>
+            <div class="vf-corner-bl"></div>
+            <div class="vf-corner-br"></div>
+          </div>
+          <div class="vf-hint">Apunta a la etiqueta de precio</div>
+        </div>
+        <button class="cam-btn" id="cam-btn">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+          Cámara
+        </button>
+      </div>
+
+      <!-- Body -->
+      <div class="scanner-body">
+        <!-- Price Input Card -->
+        <div class="pin-card">
+          <div class="pin-row">
+            <div style="flex:1.8">
+              <label class="input-label">Precio (Bs.)</label>
+              <input class="input" id="pin-price" type="number" placeholder="0.00" inputmode="decimal" autocomplete="off">
+            </div>
+            <div style="flex:2.5">
+              <label class="input-label">Descripción</label>
+              <input class="input text-font" id="pin-name" type="text" placeholder="Ej: Arroz 1kg">
+            </div>
+          </div>
+          <div class="pin-preview" id="pin-preview">
+            <span class="pin-preview-lbl">Equivale a</span>
+            <span class="pin-preview-val" id="pin-usd">$0.00</span>
+          </div>
+          <button class="btn-primary" id="add-btn">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Agregar al carrito
+          </button>
+        </div>
+
+        <!-- Cart -->
+        <div class="sec-row">
+          <span class="sec-lbl">Carrito</span>
+          <button id="clear-cart" style="font-size:12px;color:var(--primary);background:none;border:none;cursor:pointer;padding:4px 6px;border-radius:6px;font-weight:600">Limpiar</button>
+        </div>
+        <div id="cart-list"></div>
+        <div id="cart-empty" class="empty">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+          <p>El carrito está vacío</p>
+          <small>Ingresa un precio para convertirlo</small>
+        </div>
+        <div class="cart-total" id="cart-total">
+          <div class="ct-row">
+            <span class="ct-lbl">Total en bolívares</span>
+            <span class="ct-val" id="ct-ves">Bs. 0</span>
+          </div>
+          <hr class="ct-div">
+          <div class="ct-main-lbl">Total en dólares</div>
+          <div class="ct-main-val" id="ct-usd">$0.00</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════ HISTORIAL ═══════════ -->
+    <section id="screen-historial" class="screen">
+      <div class="hist-filters">
+        <button class="hf-chip" data-d="7">7D</button>
+        <button class="hf-chip active" data-d="30">30D</button>
+        <button class="hf-chip" data-d="60">60D</button>
+        <button class="hf-chip" data-d="90">90D</button>
+      </div>
+      <div class="chart-card">
+        <div class="sec-row" style="margin-bottom:10px">
+          <span class="sec-lbl">Evolución BCV</span>
+          <span id="chart-period" style="font-size:11px;color:var(--text-3)">Últimos 30 días</span>
+        </div>
+        <div class="chart-wrap"><canvas id="hist-chart"></canvas></div>
+      </div>
+      <div class="hist-stats">
+        <div class="hs-cell"><div class="hs-lbl">Mínimo</div><div class="hs-val" id="hs-min">—</div></div>
+        <div class="hs-cell"><div class="hs-lbl">Promedio</div><div class="hs-val" id="hs-avg">—</div></div>
+        <div class="hs-cell"><div class="hs-lbl">Máximo</div><div class="hs-val" id="hs-max">—</div></div>
+      </div>
+      <div class="hist-list" id="hist-list"></div>
+    </section>
+
+    <!-- ═══════════ ALERTAS ═══════════ -->
+    <section id="screen-alertas" class="screen">
+      <div class="alert-create">
+        <div class="sec-row" style="margin-bottom:10px"><span class="sec-lbl">Nueva alerta</span></div>
+        <div class="type-toggle">
+          <button class="tt-opt active" data-type="above">📈 Sube de</button>
+          <button class="tt-opt" data-type="below">📉 Baja de</button>
+        </div>
+        <div class="alert-create-row">
+          <div style="flex:1">
+            <label class="input-label">Tasa umbral (Bs/USD)</label>
+            <input class="input" id="al-input" type="number" placeholder="36.50" inputmode="decimal">
+          </div>
+          <button class="create-btn" id="al-create-btn">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+            Crear
+          </button>
+        </div>
+      </div>
+      <div style="padding:14px 16px 0">
+        <div class="sec-row">
+          <span class="sec-lbl">Mis alertas</span>
+          <span id="al-count" style="font-size:11px;color:var(--text-3)">0 activas</span>
+        </div>
+      </div>
+      <div style="padding:0 16px" id="al-list"></div>
+      <div id="al-empty" class="empty">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        <p>Sin alertas configuradas</p>
+        <small>Crea una alerta para monitorear la tasa</small>
+      </div>
+    </section>
+
+    <!-- ═══════════ AJUSTES ═══════════ -->
+    <section id="screen-ajustes" class="screen">
+      <div class="premium-card">
+        <div class="pm-badge">⭐ PREMIUM</div>
+        <div class="pm-title">TasaVe Pro</div>
+        <div class="pm-sub">Sin anuncios · Funciones exclusivas</div>
+        <div class="pm-features">
+          <div class="pm-feat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Sin publicidad</div>
+          <div class="pm-feat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Alertas ilimitadas</div>
+          <div class="pm-feat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Historial extendido 90 días</div>
+        </div>
+        <button class="pm-btn">Probar gratis 7 días</button>
+      </div>
+
+      <div style="padding:14px 16px 0"><div class="sec-row"><span class="sec-lbl">Preferencias</span></div></div>
+      <div class="settings-group">
+        <div class="si" id="toggle-acc">
+          <div class="si-icon blue"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>
+          <div class="si-info"><div class="si-title">Texto grande</div><div class="si-sub">Modo accesible</div></div>
+          <button class="toggle" id="acc-toggle"></button>
+        </div>
+        <div class="si" onclick="shareRate()">
+          <div class="si-icon green"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg></div>
+          <div class="si-info"><div class="si-title">Compartir tasa</div><div class="si-sub">Enviar por WhatsApp u otras apps</div></div>
+          <svg class="si-chev" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+        </div>
+        <div class="si">
+          <div class="si-icon orange"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg></div>
+          <div class="si-info"><div class="si-title">Fuente de datos</div><div class="si-sub">BCV Oficial · Actualiza diario</div></div>
+          <svg class="si-chev" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+        </div>
+      </div>
+
+      <div style="padding:10px 16px 0"><div class="sec-row"><span class="sec-lbl">Acerca de</span></div></div>
+      <div class="settings-group" style="margin-bottom:0">
+        <div class="si">
+          <div class="si-icon red"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+          <div class="si-info"><div class="si-title">Política de privacidad</div><div class="si-sub">tasave.app/privacidad</div></div>
+          <svg class="si-chev" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+        </div>
+        <div class="si">
+          <div class="si-icon purple"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div>
+          <div class="si-info"><div class="si-title">Valorar en Play Store</div><div class="si-sub">¡Tu opinión nos ayuda!</div></div>
+          <svg class="si-chev" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+        </div>
+      </div>
+      <div class="ver-tag">TasaVe v1.0.0 · Datos BCV Oficial · Modo Demo Web</div>
+    </section>
+
+  </div><!-- /content -->
+
+  <!-- BOTTOM NAV -->
+  <nav class="nav">
+    <button class="ni active" data-tab="home">
+      <div class="ni-dot"></div>
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      <span>Inicio</span>
+    </button>
+    <button class="ni ni-scan" data-tab="scanner">
+      <div class="scan-fab">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="3" height="3" rx=".5"/><rect x="18" y="18" width="3" height="3" rx=".5"/><rect x="14" y="18" width="3" height="3" rx=".5" opacity=".4"/><rect x="18" y="14" width="3" height="3" rx=".5" opacity=".4"/></svg>
+      </div>
+      <span>Scanner</span>
+    </button>
+    <button class="ni" data-tab="historial">
+      <div class="ni-dot"></div>
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      <span>Historial</span>
+    </button>
+    <button class="ni" data-tab="alertas">
+      <div class="ni-dot"></div>
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+      <span>Alertas</span>
+    </button>
+    <button class="ni" data-tab="ajustes">
+      <div class="ni-dot"></div>
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      <span>Ajustes</span>
+    </button>
+  </nav>
+
+</div><!-- /app -->
+
+<div id="toast"></div>
+
+<script>
+/* =========================================================
+   TASAVE WEB — Arquitectura SPA limpia
+   Senior Engineer pattern: módulos separados, sin setState
+   global directo, reactive rendering
+   ========================================================= */
+
+// ─── CONSTANTES ──────────────────────────────────────────
+const IVA   = 0.16;
+const IGTF  = 0.03;
+const LS_RATE    = 'tv_rate_cache';
+const LS_ALERTS  = 'tv_alerts';
+const LS_ACCESS  = 'tv_accessible';
+
+// ─── ESTADO CENTRAL ───────────────────────────────────────
+const state = {
+  rate:        null,
+  lastUpdate:  null,
+  history:     [],
+  histDays:    30,
+  direction:   'USD_VES',   // 'USD_VES' | 'VES_USD'
+  alerts:      [],
+  alertType:   'above',
+  cart:        [],
+  accessible:  false,
+  camActive:   false,
+  refreshing:  false,
+  chartInst:   null,
+};
+
+// ─── FORMATTERS ───────────────────────────────────────────
+const fmt = {
+  rate : v => v.toLocaleString('es-VE', {minimumFractionDigits:4, maximumFractionDigits:4}),
+  usd  : v => v.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2}),
+  ves  : v => v.toLocaleString('es-VE', {minimumFractionDigits:2, maximumFractionDigits:2}),
+  date : d => d.toLocaleDateString('es-VE', {day:'2-digit', month:'short'}),
+  ago  : d => {
+    const m = (Date.now() - d) / 60000;
+    if (m < 1)  return 'Hace un momento';
+    if (m < 60) return `Hace ${Math.floor(m)} min`;
+    const h = Math.floor(m / 60);
+    if (h < 24) return `Hace ${h}h`;
+    return `Hace ${Math.floor(h/24)}d`;
+  },
+};
+
+// ─── TOAST ────────────────────────────────────────────────
+let _toastT;
+function toast(msg, ms = 2600) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(_toastT);
+  _toastT = setTimeout(() => el.classList.remove('show'), ms);
+}
+
+// ─── HISTORY GENERATOR (datos realistas) ──────────────────
+function buildHistory(days = 90) {
+  const arr = [];
+  const now = new Date();
+  let rate   = 35.92;        // tasa base aproximada
+  for (let i = days; i >= 0; i--) {
+    const d = new Date(now);
+    d.setDate(d.getDate() - i);
+    // Tendencia lenta alcista + ruido pequeño
+    rate += (Math.random() - 0.32) * 0.09;
+    rate  = Math.max(34.2, Math.min(42, rate));
+    arr.push({ date: new Date(d), rate: parseFloat(rate.toFixed(4)) });
+  }
+  return arr;
+}
+
+// ─── FETCH RATE (simulado + caché) ────────────────────────
+async function fetchRate() {
+  if (state.refreshing) return;
+  state.refreshing = true;
+  const ico = document.getElementById('ref-ico');
+  ico.classList.add('spin');
+  try {
+    await new Promise(r => setTimeout(r, 700 + Math.random() * 500));
+    const base  = state.history[state.history.length - 1].rate;
+    state.rate  = parseFloat((base + (Math.random() - 0.5) * 0.025).toFixed(4));
+    state.lastUpdate = new Date();
+    localStorage.setItem(LS_RATE, JSON.stringify({ rate: state.rate, ts: state.lastUpdate.toISOString() }));
+    renderRate(); renderConverter(); renderStats();
+    toast('✓ Tasa actualizada correctamente');
+  } catch {
+    toast('Sin conexión · Usando caché');
+  } finally {
+    state.refreshing = false;
+    ico.classList.remove('spin');
+  }
+}
+
+// ─── RENDER: RATE CARD ────────────────────────────────────
+function renderRate() {
+  if (!state.rate) return;
+  const prev   = state.history[state.history.length - 2]?.rate ?? state.rate;
+  const delta  = state.rate - prev;
+  const pct    = ((delta / prev) * 100).toFixed(2);
+  document.getElementById('rate-num').textContent = fmt.rate(state.rate);
+  document.getElementById('rate-upd').textContent = fmt.ago(state.lastUpdate);
+  const badge  = document.getElementById('rate-badge');
+  const chg    = document.getElementById('rate-chg');
+  if (delta >= 0) {
+    badge.className = 'rate-badge';
+    chg.textContent = `+${pct}%`;
+    badge.querySelector('svg').style.transform = 'rotate(180deg)';
+  } else {
+    badge.className = 'rate-badge green';
+    chg.textContent = `${pct}%`;
+    badge.querySelector('svg').style.transform = '';
+  }
+}
+
+// ─── RENDER: CONVERTER ────────────────────────────────────
+function renderConverter() {
+  const isU2V = state.direction === 'USD_VES';
+  document.getElementById('from-flag').textContent = isU2V ? '🇺🇸' : '🇻🇪';
+  document.getElementById('to-flag').textContent   = isU2V ? '🇻🇪' : '🇺🇸';
+  document.getElementById('from-ccy').textContent  = isU2V ? 'USD — Dólar' : 'VES — Bolívar';
+  document.getElementById('to-ccy').textContent    = isU2V ? 'VES — Bolívar' : 'USD — Dólar';
+
+  const raw    = parseFloat(document.getElementById('amt-input').value) || 0;
+  const resEl  = document.getElementById('conv-result');
+
+  if (!state.rate || raw === 0) {
+    resEl.textContent = '—';
+    resEl.className   = 'conv-result dim';
+    clearTaxes(); return;
+  }
+
+  resEl.className = 'conv-result';
+  let usdAmt;
+  if (isU2V) {
+    resEl.textContent = `Bs. ${fmt.ves(raw * state.rate)}`;
+    usdAmt = raw;
+  } else {
+    const converted = raw / state.rate;
+    resEl.textContent = `$${fmt.usd(converted)}`;
+    usdAmt = converted;
+  }
+  renderTaxes(usdAmt);
+}
+
+function clearTaxes() {
+  ['t-iva','t-igtf','t-iva-b','t-igtf-b'].forEach(id => {
+    document.getElementById(id).textContent = '—';
+  });
+}
+
+function renderTaxes(usdAmt) {
+  if (!state.rate || !usdAmt) { clearTaxes(); return; }
+  const wIva  = usdAmt * (1 + IVA);
+  const wIgtf = usdAmt * (1 + IGTF);
+  document.getElementById('t-iva').textContent   = `$${fmt.usd(wIva)}`;
+  document.getElementById('t-igtf').textContent  = `$${fmt.usd(wIgtf)}`;
+  document.getElementById('t-iva-b').textContent = `Bs. ${fmt.ves(wIva * state.rate)}`;
+  document.getElementById('t-igtf-b').textContent= `Bs. ${fmt.ves(wIgtf * state.rate)}`;
+}
+
+// ─── RENDER: QUICK AMOUNTS ────────────────────────────────
+function renderQuickAmounts() {
+  const isU2V = state.direction === 'USD_VES';
+  const amts  = isU2V ? [1,5,10,20,50,100,200,500] : [100,500,1000,5000,10000,20000,50000,100000];
+  const grid  = document.getElementById('quick-grid');
+  grid.innerHTML = amts.map(a => {
+    const lbl = a >= 1000 ? `${a/1000}K` : a;
+    const pfx = isU2V ? '$' : 'Bs.';
+    const conv= state.rate
+      ? (isU2V ? `Bs. ${fmt.ves(a * state.rate)}` : `$${fmt.usd(a / state.rate)}`)
+      : '—';
+    return `<div class="quick-chip" data-a="${a}">
+      <div class="qc-amt">${pfx}${lbl}</div>
+      <div class="qc-conv">${conv}</div>
+    </div>`;
+  }).join('');
+  grid.querySelectorAll('.quick-chip').forEach(c => {
+    c.addEventListener('click', () => {
+      document.getElementById('amt-input').value = c.dataset.a;
+      renderConverter();
+    });
+  });
+}
+
+// ─── RENDER: STATS ────────────────────────────────────────
+function renderStats() {
+  const h  = state.history;
+  const n  = h.length;
+  if (n < 2) return;
+  const last30 = h.slice(-30).map(x => x.rate);
+  document.getElementById('s-yesterday').textContent = fmt.rate(h[n-2].rate);
+  document.getElementById('s-week').textContent      = n >= 8 ? fmt.rate(h[n-8].rate) : '—';
+  document.getElementById('s-min').textContent       = fmt.rate(Math.min(...last30));
+  document.getElementById('s-max').textContent       = fmt.rate(Math.max(...last30));
+}
+
+// ─── CHART ────────────────────────────────────────────────
+function renderChart(days) {
+  const slice = state.history.slice(-days);
+  const labels= slice.map(d => fmt.date(d.date));
+  const data  = slice.map(d => d.rate);
+  const minV  = Math.min(...data);
+  const maxV  = Math.max(...data);
+  const avgV  = data.reduce((a,b) => a+b, 0) / data.length;
+
+  document.getElementById('hs-min').textContent = fmt.rate(minV);
+  document.getElementById('hs-avg').textContent = fmt.rate(avgV);
+  document.getElementById('hs-max').textContent = fmt.rate(maxV);
+
+  const nth = Math.ceil(days / 8);
+  const disp = labels.map((l, i) => i % nth === 0 ? l : '');
+
+  if (state.chartInst) {
+    state.chartInst.data.labels                  = disp;
+    state.chartInst.data.datasets[0].data        = data;
+    state.chartInst.options.scales.y.min         = minV - 0.15;
+    state.chartInst.options.scales.y.max         = maxV + 0.15;
+    state.chartInst.update('none');
+    renderHistList(days);
+    return;
+  }
+
+  const ctx = document.getElementById('hist-chart');
+  state.chartInst = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: disp,
+      datasets: [{
+        data, borderColor: '#E53935', borderWidth: 2,
+        pointRadius: 0, pointHoverRadius: 5,
+        pointHoverBackgroundColor: '#E53935',
+        tension: 0.42, fill: true,
+        backgroundColor: (c) => {
+          const g = c.chart.ctx.createLinearGradient(0,0,0,190);
+          g.addColorStop(0, 'rgba(229,57,53,0.18)');
+          g.addColorStop(1, 'rgba(229,57,53,0)');
+          return g;
+        },
+      }],
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { intersect: false, mode: 'index' },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#1A1A1A',
+          titleFont: { family: 'Space Mono', size: 10 },
+          bodyFont:  { family: 'Space Mono', size: 13, weight: 'bold' },
+          padding: 10,
+          callbacks: {
+            title : (it) => labels[it[0].dataIndex],
+            label : (it) => ` Bs. ${fmt.rate(it.raw)}`,
+          },
+        },
+      },
+      scales: {
+        x: {
+          grid: { display: false },
+          ticks: { font: { family:'DM Sans', size:9 }, color:'#9E9E9E', maxRotation:0 },
+        },
+        y: {
+          position: 'right',
+          grid: { color: 'rgba(0,0,0,0.04)' },
+          ticks: { font: { family:'Space Mono', size:9 }, color:'#9E9E9E', callback: v => fmt.rate(v) },
+          min: minV - 0.15, max: maxV + 0.15,
+        },
+      },
+    },
+  });
+  renderHistList(days);
+}
+
+function renderHistList(days) {
+  const slice = [...state.history].slice(-days).reverse().slice(0, 12);
+  document.getElementById('hist-list').innerHTML = slice.map((d, i) => {
+    const prev  = state.history[state.history.length - days + (days - 1 - i) - 1];
+    const delta = prev ? d.rate - prev.rate : 0;
+    const color = delta > 0 ? '#EF5350' : delta < 0 ? '#4CAF50' : '#9E9E9E';
+    const arrow = delta > 0 ? '▲' : delta < 0 ? '▼' : '→';
+    return `<div class="hr-item">
+      <span class="hr-date">${fmt.date(d.date)}</span>
+      <span class="hr-rate">${fmt.rate(d.rate)}</span>
+      <span class="hr-delta" style="color:${color}">${arrow} ${Math.abs(delta).toFixed(4)}</span>
+    </div>`;
+  }).join('');
+}
+
+// ─── SCANNER / CART ───────────────────────────────────────
+function renderCart() {
+  const list  = document.getElementById('cart-list');
+  const empty = document.getElementById('cart-empty');
+  const total = document.getElementById('cart-total');
+
+  if (!state.cart.length) {
+    list.innerHTML = '';
+    empty.style.display = 'flex';
+    total.style.display  = 'none';
+    return;
+  }
+  empty.style.display = 'none';
+  total.style.display  = 'block';
+
+  list.innerHTML = state.cart.map((item, i) => `
+    <div class="cart-item">
+      <div class="ci-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+      </div>
+      <div class="ci-info">
+        <div class="ci-name">${item.name}</div>
+        <div class="ci-ves">Bs. ${fmt.ves(item.ves)}</div>
+      </div>
+      <div class="ci-usd">$${fmt.usd(item.usd)}</div>
+      <button class="ci-del" onclick="delCartItem(${i})">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+      </button>
+    </div>
+  `).join('');
+
+  const tVes = state.cart.reduce((s, i) => s + i.ves, 0);
+  const tUsd = state.cart.reduce((s, i) => s + i.usd, 0);
+  document.getElementById('ct-ves').textContent = `Bs. ${fmt.ves(tVes)}`;
+  document.getElementById('ct-usd').textContent = `$${fmt.usd(tUsd)}`;
+}
+
+window.delCartItem = (i) => { state.cart.splice(i, 1); renderCart(); };
+
+// ─── ALERTS ───────────────────────────────────────────────
+function renderAlerts() {
+  const list  = document.getElementById('al-list');
+  const empty = document.getElementById('al-empty');
+  const cnt   = document.getElementById('al-count');
+  const active= state.alerts.filter(a => a.on).length;
+  cnt.textContent = `${active} activa${active !== 1 ? 's' : ''}`;
+
+  if (!state.alerts.length) {
+    list.innerHTML = '';
+    empty.style.display = 'flex';
+    return;
+  }
+  empty.style.display = 'none';
+
+  list.innerHTML = state.alerts.map((a, i) => `
+    <div class="alert-item">
+      <div class="ai-icon ${a.type}">
+        ${a.type === 'above'
+          ? '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>'
+          : '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/><polyline points="17 18 23 18 23 12"/></svg>'
+        }
+      </div>
+      <div class="ai-info">
+        <div class="ai-dir">${a.type === 'above' ? '📈 Sube de' : '📉 Baja de'}</div>
+        <div class="ai-thr">Bs. ${fmt.rate(a.thr)}</div>
+      </div>
+      <button class="toggle ${a.on ? 'on' : ''}" onclick="toggleAlert(${i})"></button>
+      <button class="ci-del" onclick="delAlert(${i})" style="margin-left:4px">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+      </button>
+    </div>
+  `).join('');
+}
+
+window.toggleAlert = (i) => { state.alerts[i].on = !state.alerts[i].on; renderAlerts(); saveAlerts(); };
+window.delAlert    = (i) => { state.alerts.splice(i, 1); renderAlerts(); saveAlerts(); };
+
+function saveAlerts() { localStorage.setItem(LS_ALERTS, JSON.stringify(state.alerts)); }
+function loadAlerts() {
+  try { state.alerts = JSON.parse(localStorage.getItem(LS_ALERTS) || '[]'); } catch {}
+}
+
+function checkAlerts() {
+  if (!state.rate) return;
+  state.alerts.filter(a => a.on).forEach(a => {
+    if (a.type === 'above' && state.rate >= a.thr) toast(`⚠️ Tasa superó Bs. ${fmt.rate(a.thr)}`);
+    if (a.type === 'below' && state.rate <= a.thr) toast(`⚠️ Tasa bajó de Bs. ${fmt.rate(a.thr)}`);
+  });
+}
+
+// ─── CAMERA ───────────────────────────────────────────────
+async function toggleCamera() {
+  const vid = document.getElementById('cam-video');
+  const ph  = document.getElementById('vf-no-cam');
+  if (state.camActive) {
+    vid.srcObject?.getTracks().forEach(t => t.stop());
+    vid.srcObject = null; vid.style.display = 'none';
+    ph.style.display = 'flex'; state.camActive = false; return;
+  }
+  try {
+    const s = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+    vid.srcObject = s; vid.style.display = 'block';
+    ph.style.display = 'none'; state.camActive = true;
+    toast('📷 Cámara activa · Ingresa el precio manualmente');
+  } catch { toast('No se pudo acceder a la cámara'); }
+}
+
+// ─── SHARE ────────────────────────────────────────────────
+function shareRate() {
+  if (!state.rate) { toast('Tasa no disponible'); return; }
+  const text = `💵 Tasa BCV oficial: Bs. ${fmt.rate(state.rate)} por USD\n📅 ${state.lastUpdate?.toLocaleDateString('es-VE')}\n\nVía TasaVe 🇻🇪`;
+  if (navigator.share) {
+    navigator.share({ title: 'TasaVe — Tasa BCV', text }).catch(() => {});
+  } else {
+    navigator.clipboard?.writeText(text);
+    toast('✓ Copiado al portapapeles');
+  }
+}
+window.shareRate = shareRate;
+
+// ─── TAB NAVIGATION ───────────────────────────────────────
+function switchTab(tab) {
+  document.querySelectorAll('.ni').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+  document.querySelectorAll('.screen').forEach(s => s.classList.toggle('active', s.id === `screen-${tab}`));
+  if (tab === 'historial' && !state.chartInst) { setTimeout(() => renderChart(state.histDays), 80); }
+  if (tab === 'historial' && state.chartInst)  { renderChart(state.histDays); }
+  if (tab === 'alertas')  renderAlerts();
+}
+
+// ─── EVENT WIRING ─────────────────────────────────────────
+function wireEvents() {
+  // Nav
+  document.querySelectorAll('.ni').forEach(b => b.addEventListener('click', () => switchTab(b.dataset.tab)));
+
+  // Refresh
+  document.getElementById('refresh-btn').addEventListener('click', fetchRate);
+
+  // Converter
+  document.getElementById('amt-input').addEventListener('input', renderConverter);
+  document.getElementById('swap-btn').addEventListener('click', () => {
+    state.direction = state.direction === 'USD_VES' ? 'VES_USD' : 'USD_VES';
+    document.getElementById('amt-input').value = '';
+    renderConverter(); renderQuickAmounts();
+  });
+
+  // History filters
+  document.querySelectorAll('.hf-chip').forEach(b => {
+    b.addEventListener('click', () => {
+      document.querySelectorAll('.hf-chip').forEach(x => x.classList.remove('active'));
+      b.classList.add('active');
+      state.histDays = parseInt(b.dataset.d);
+      const map = {7:'7 días',30:'30 días',60:'60 días',90:'90 días'};
+      document.getElementById('chart-period').textContent = `Últimos ${map[state.histDays]}`;
+      renderChart(state.histDays);
+    });
+  });
+
+  // Scanner price input → live preview
+  document.getElementById('pin-price').addEventListener('input', function() {
+    const v = parseFloat(this.value) || 0;
+    const pr= document.getElementById('pin-preview');
+    if (v > 0 && state.rate) {
+      pr.classList.add('show');
+      document.getElementById('pin-usd').textContent = `$${fmt.usd(v / state.rate)}`;
+    } else { pr.classList.remove('show'); }
+  });
+
+  // Add to cart
+  document.getElementById('add-btn').addEventListener('click', () => {
+    const pEl = document.getElementById('pin-price');
+    const nEl = document.getElementById('pin-name');
+    const ves = parseFloat(pEl.value);
+    if (!ves || ves <= 0) { toast('Ingresa un precio válido'); pEl.focus(); return; }
+    if (!state.rate) { toast('Esperando tasa…'); return; }
+    state.cart.push({ name: nEl.value.trim() || 'Producto', ves, usd: ves / state.rate });
+    pEl.value = ''; nEl.value = '';
+    document.getElementById('pin-preview').classList.remove('show');
+    renderCart(); toast('✓ Agregado al carrito');
+    nEl.focus();
+  });
+
+  // Scanner keyboard shortcuts
+  document.getElementById('pin-price').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('pin-name').focus(); });
+  document.getElementById('pin-name').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('add-btn').click(); });
+
+  // Clear cart
+  document.getElementById('clear-cart').addEventListener('click', () => {
+    if (!state.cart.length) return;
+    state.cart = []; renderCart(); toast('Carrito limpiado');
+  });
+
+  // Camera
+  document.getElementById('cam-btn').addEventListener('click', toggleCamera);
+
+  // Alerts type toggle
+  document.querySelectorAll('.tt-opt').forEach(b => {
+    b.addEventListener('click', () => {
+      document.querySelectorAll('.tt-opt').forEach(x => x.classList.remove('active'));
+      b.classList.add('active'); state.alertType = b.dataset.type;
+    });
+  });
+
+  // Create alert
+  document.getElementById('al-create-btn').addEventListener('click', () => {
+    const el = document.getElementById('al-input');
+    const v  = parseFloat(el.value);
+    if (!v || v <= 0) { toast('Ingresa una tasa válida'); el.focus(); return; }
+    state.alerts.unshift({ type: state.alertType, thr: v, on: true });
+    el.value = ''; renderAlerts(); saveAlerts(); toast('✓ Alerta creada');
+  });
+
+  // Accessibility toggle
+  document.getElementById('toggle-acc').addEventListener('click', () => {
+    state.accessible = !state.accessible;
+    document.getElementById('acc-toggle').classList.toggle('on', state.accessible);
+    document.documentElement.style.fontSize = state.accessible ? '18px' : '16px';
+    localStorage.setItem(LS_ACCESS, state.accessible);
+    toast(state.accessible ? 'Texto grande activado' : 'Texto normal restaurado');
+  });
+}
+
+// ─── INIT ─────────────────────────────────────────────────
+function init() {
+  // Generate historical data
+  state.history = buildHistory(90);
+
+  // Load cache
+  try {
+    const c = JSON.parse(localStorage.getItem(LS_RATE) || '{}');
+    if (c.rate && c.ts) { state.rate = c.rate; state.lastUpdate = new Date(c.ts); }
+  } catch {}
+
+  // Load accessibility
+  state.accessible = localStorage.getItem(LS_ACCESS) === 'true';
+  if (state.accessible) {
+    document.getElementById('acc-toggle').classList.add('on');
+    document.documentElement.style.fontSize = '18px';
+  }
+
+  // Fallback: use last history rate
+  if (!state.rate) {
+    state.rate = state.history[state.history.length - 1].rate;
+    state.lastUpdate = state.history[state.history.length - 1].date;
+  }
+
+  loadAlerts();
+  wireEvents();
+
+  // Initial renders
+  renderRate();
+  renderConverter();
+  renderQuickAmounts();
+  renderStats();
+  renderCart();
+
+  // Auto-fetch after brief delay (like app startup)
+  setTimeout(fetchRate, 1000);
+
+  // Alert polling
+  setInterval(checkAlerts, 60000);
+}
+
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>

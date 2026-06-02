@@ -2,8 +2,7 @@ import 'package:dio/dio.dart';
 import '../models/tasa_model.dart';
 
 /// URL base del API de TasaVe (Cloudflare Worker).
-/// TODO: Configurar según entorno (producción/desarrollo)
-const _apiBaseUrl = 'https://tasave-api.tusubdominio.workers.dev';
+const _apiBaseUrl = 'https://tasave-api.miztmutzuki.workers.dev';
 
 class BcvService {
   late final Dio _dio;

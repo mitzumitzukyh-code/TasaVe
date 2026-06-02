@@ -1,3 +1,5 @@
+import 'package:flutter/material.dart';
+
 /// Constantes fiscales y de negocio centralizadas.
 /// Toda la lógica matemática debe consumir estas variables,
 /// NUNCA números mágicos directamente en widgets.
@@ -15,6 +17,24 @@ class AppConstants {
 
   /// URL de producción web
   static const String productionUrl = 'https://tasave-app.pages.dev/';
+
+  // ── UI ──────────────────────────────────────────────────
+  static const double kBorderRadius = 10.0;
+  static const double kBorderRadiusLg = 12.0;
+  static const double kPaddingH = 18.0;
+  static const double kPaddingV = 14.0;
+
+  // ── Horario BCV ─────────────────────────────────────────
+  static const String kBcvSchedule = '4:00 – 6:00 PM';
+
+  // ── Color oscuro para display calculadora ───────────────
+  static const Color kDark = Color(0xFF1A1A1A);
+
+  // ── Preferencias SharedPreferences keys ─────────────────
+  static const String kPrefDefaultRate = 'pref_default_rate';
+  static const String kPrefDecimalFormat = 'pref_decimal_format';
+  static const String kPrefAccessibility = 'pref_accessibility';
+  static const String kPrefAlerts = 'pref_alerts_json';
 
   /// Lista maestra de bancos venezolanos con código interbancario de 4 dígitos
   static const List<VenezuelanBank> venezuelanBanks = [

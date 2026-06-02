@@ -1,0 +1,30 @@
+{
+  "permissions": {
+    "Bash": { "allow": true },
+    "Read": { "allow": true },
+    "Write": { "allow": true },
+    "Edit": { "allow": true },
+    "Glob": { "allow": true },
+    "Grep": { "allow": true },
+    "WebFetch": { "allow": true },
+    "WebSearch": { "allow": true },
+    "TaskCreate": { "allow": true },
+    "TaskUpdate": { "allow": true },
+    "TaskList": { "allow": true },
+    "TaskGet": { "allow": true },
+    "TaskOutput": { "allow": true },
+    "TaskStop": { "allow": true },
+    "Agent": { "allow": true },
+    "Workflow": { "allow": true },
+    "Skill": { "allow": true },
+    "AskUserQuestion": { "allow": true },
+    "EnterPlanMode": { "allow": true },
+    "EnterWorktree": { "allow": true },
+    "ExitWorktree": { "allow": true },
+    "CronCreate": { "allow": true },
+    "CronDelete": { "allow": true },
+    "CronList": { "allow": true },
+    "ScheduleWakeup": { "allow": true },
+    "NotebookEdit": { "allow": true }
+  }
+}
