@@ -316,7 +316,7 @@ class _BankHome extends StatelessWidget {
                     SizedBox(
                       width: 28,
                       child: Text(
-                        'USD',
+                        isUsdInput ? 'USD' : 'Bs',
                         style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w500,
@@ -386,7 +386,7 @@ class _BankHome extends StatelessWidget {
                     SizedBox(
                       width: 28,
                       child: Text(
-                        'Bs',
+                        isUsdInput ? 'Bs' : 'USD',
                         style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w500,
@@ -443,7 +443,7 @@ class _BankHome extends StatelessWidget {
           ),
           // USDT (opacidad reducida)
           _CurrencyRow(
-            icon: Icons.currency_bitcoin,
+            icon: Icons.toll,
             name: 'USDT',
             source: 'P2P · referencia',
             value: tasa.usdtP2P,
