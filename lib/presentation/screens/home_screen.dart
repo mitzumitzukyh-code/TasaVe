@@ -91,35 +91,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             message: 'Error al obtener la tasa',
             onRetry: () => ref.read(tasaProvider.notifier).refresh(),
           ),
-          data: (tasa) {
-            final historyAsync = ref.watch(historyProvider(2));
-            final double? change = historyAsync.whenOrNull(
-              data: (history) {
-                if (history.isEmpty) return null;
-                final now = DateTime.now();
-                for (final entry in history) {
-                  if (entry.date.day != now.day ||
-                      entry.date.month != now.month ||
-                      entry.date.year != now.year) {
-                    if (entry.bcvUsd > 0) {
-                      return ((tasa.bcvUsd - entry.bcvUsd) / entry.bcvUsd) * 100;
-                    }
-                    break;
-                  }
-                }
-                return null;
-              },
-            );
-            return _HomeContent(
-              tasa: tasa,
-              change: change,
-              controller: _controller,
-              isUsdInput: _isUsdInput,
-              result: _result,
-              onSwap: _swap,
-              onMaskChanged: _applyMask,
-            );
-          },
+          data: (tasa) => _BankHome(
+            tasa: tasa,
+            controller: _controller,
+            isUsdInput: _isUsdInput,
+            result: _result,
+            onSwap: _swap,
+            onMaskChanged: _applyMask,
+            historyAsync: ref.watch(historyProvider(2)),
+          ),
         ),
       ),
     );
@@ -127,116 +107,369 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 }
 
 // ─────────────────────────────────────────────────────────────
-// HOME CONTENT
+// BANK HOME — diseño completo tipo app de banco
 // ─────────────────────────────────────────────────────────────
 
-class _HomeContent extends StatelessWidget {
+class _BankHome extends StatelessWidget {
   final TasaModel tasa;
-  final double? change;
   final TextEditingController controller;
   final bool isUsdInput;
   final String result;
   final VoidCallback onSwap;
   final String Function(String) onMaskChanged;
+  final AsyncValue<List<TasaHistoryEntry>> historyAsync;
 
-  const _HomeContent({
+  const _BankHome({
     required this.tasa,
-    this.change,
     required this.controller,
     required this.isUsdInput,
     required this.result,
     required this.onSwap,
     required this.onMaskChanged,
+    required this.historyAsync,
   });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
+    // ── Calcular % de cambio vs día anterior ──
+    final double? change = historyAsync.whenOrNull(
+      data: (history) {
+        if (history.isEmpty) return null;
+        final now = DateTime.now();
+        for (final entry in history) {
+          if (entry.date.day != now.day ||
+              entry.date.month != now.month ||
+              entry.date.year != now.year) {
+            if (entry.bcvUsd > 0) {
+              return ((tasa.bcvUsd - entry.bcvUsd) / entry.bcvUsd) * 100;
+            }
+            break;
+          }
+        }
+        return null;
+      },
+    );
+
+    // ── Tiempo desde última actualización ──
     final diff = DateTime.now().difference(tasa.timestamp);
-    final timeAgo = diff.inMinutes < 1
+    final timeAgoStr = diff.inMinutes < 1
         ? 'ahora'
         : diff.inMinutes < 60
-            ? 'hace ${diff.inMinutes} min'
+            ? 'hace ${diff.inMinutes}min'
             : 'hace ${diff.inHours}h';
+
+    // ── Formatear tasa principal ──
+    final formatted = Formatters.formatRate(tasa.bcvUsd);
+    final parts = formatted.split(',');
+    final intPart = parts.isNotEmpty ? parts[0] : '0';
+    final decPart = parts.length > 1 ? parts[1] : '00';
 
     return SingleChildScrollView(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 1. TOP BAR
+          // ═══════════════════════════════════════════
+          // 1. HEADER
+          // ═══════════════════════════════════════════
           Padding(
-            padding: const EdgeInsets.fromLTRB(14, 8, 14, 6),
+            padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
                   'tasave',
                   style: TextStyle(
-                    fontSize: 17,
+                    fontSize: 16,
                     fontWeight: FontWeight.w500,
                     letterSpacing: -0.5,
-                    color: theme.colorScheme.primary,
+                    color: const Color(0xFFE53935),
                   ),
                 ),
-                Text(
-                  'BCV · $timeAgo',
-                  style: TextStyle(
-                    fontSize: 10,
-                    color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
-                  ),
+                IconButton(
+                  onPressed: () {},
+                  icon: const Icon(Icons.notifications_outlined),
+                  color: const Color(0xFFE53935),
+                  iconSize: 22,
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                  splashRadius: 18,
                 ),
               ],
             ),
           ),
 
-          // 2. HeroCard
-          _HeroCard(
-            rate: tasa.bcvUsd,
-            change: change,
-            buyRate: tasa.bcvUsd - 0.13,
-            sellRate: tasa.bcvUsd + 0.13,
+          // ═══════════════════════════════════════════
+          // 2. HERO CARD
+          // ═══════════════════════════════════════════
+          Container(
+            margin: const EdgeInsets.fromLTRB(12, 0, 12, 0),
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: const Color(0xFFE53935),
+              borderRadius: BorderRadius.circular(18),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'DÓLAR BCV OFICIAL',
+                  style: TextStyle(
+                    fontSize: 9,
+                    fontWeight: FontWeight.w500,
+                    letterSpacing: 0.8,
+                    color: Colors.white.withValues(alpha: 0.65),
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.baseline,
+                  textBaseline: TextBaseline.alphabetic,
+                  children: [
+                    Text(
+                      'Bs',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.white.withValues(alpha: 0.65),
+                      ),
+                    ),
+                    const SizedBox(width: 3),
+                    RichText(
+                      text: TextSpan(
+                        style: const TextStyle(
+                          fontFamily: 'SpaceMono',
+                          color: Colors.white,
+                        ),
+                        children: [
+                          TextSpan(
+                            text: intPart,
+                            style: const TextStyle(
+                              fontSize: 44,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          TextSpan(
+                            text: ',$decPart',
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.w500,
+                              color: Colors.white.withValues(alpha: 0.50),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                Row(
+                  children: [
+                    if (change != null)
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 6, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFC62828),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          '${change >= 0 ? '▲' : '▼'} ${change.abs().toStringAsFixed(2)}%',
+                          style: const TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.white,
+                            fontFamily: 'SpaceMono',
+                          ),
+                        ),
+                      ),
+                    const SizedBox(width: 6),
+                    Text(
+                      'vs ayer · $timeAgoStr',
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: Colors.white.withValues(alpha: 0.70),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
 
-          // 3. SectionLabel
+          // ═══════════════════════════════════════════
+          // 3. CALCULADORA RÁPIDA
+          // ═══════════════════════════════════════════
+          Container(
+            margin: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: theme.cardColor,
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Column(
+              children: [
+                // ── Fila USD (input) ──
+                Row(
+                  children: [
+                    SizedBox(
+                      width: 28,
+                      child: Text(
+                        'USD',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w500,
+                          color: theme.colorScheme.onSurface
+                              .withValues(alpha: 0.5),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: TextField(
+                        controller: controller,
+                        keyboardType: TextInputType.number,
+                        inputFormatters: [
+                          FilteringTextInputFormatter.allow(
+                              RegExp(r'[\d.,]')),
+                        ],
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w500,
+                          fontFamily: 'SpaceMono',
+                          color: const Color(0xFFE53935),
+                        ),
+                        decoration: const InputDecoration(
+                          hintText: '0,00',
+                          hintStyle: TextStyle(
+                            fontSize: 20,
+                            fontFamily: 'SpaceMono',
+                            color: Color(0xFFBDBDBD),
+                          ),
+                          border: InputBorder.none,
+                          isDense: true,
+                          contentPadding: EdgeInsets.zero,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                // ── Divider con swap ──
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 2),
+                  child: Row(
+                    children: [
+                      const Expanded(
+                          child: Divider(height: 1, thickness: 0.5)),
+                      GestureDetector(
+                        onTap: onSwap,
+                        child: Container(
+                          width: 28,
+                          height: 28,
+                          decoration: const BoxDecoration(
+                            color: Color(0xFFE53935),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(Icons.swap_vert,
+                              color: Colors.white, size: 16),
+                        ),
+                      ),
+                      const Expanded(
+                          child: Divider(height: 1, thickness: 0.5)),
+                    ],
+                  ),
+                ),
+                // ── Fila Bs (resultado) ──
+                Row(
+                  children: [
+                    SizedBox(
+                      width: 28,
+                      child: Text(
+                        'Bs',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w500,
+                          color: theme.colorScheme.onSurface
+                              .withValues(alpha: 0.5),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        controller.text.isEmpty ? '0,00' : result,
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                          fontFamily: 'SpaceMono',
+                          color: theme.colorScheme.onSurface
+                              .withValues(alpha: 0.7),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+
+          // ═══════════════════════════════════════════
+          // 4. SECCIÓN "OTRAS MONEDAS"
+          // ═══════════════════════════════════════════
           Padding(
-            padding: const EdgeInsets.fromLTRB(14, 9, 14, 4),
+            padding: const EdgeInsets.fromLTRB(12, 14, 12, 0),
             child: Text(
-              'Calculadora rápida',
+              'OTRAS MONEDAS',
               style: TextStyle(
                 fontSize: 9,
+                fontWeight: FontWeight.w600,
                 letterSpacing: 0.5,
-                color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.45),
               ),
             ),
           ),
 
-          // 4. QuickCalculator
-          _QuickCalc(
-            controller: controller,
-            isUsdInput: isUsdInput,
-            result: result,
-            onSwap: onSwap,
-            onMaskChanged: onMaskChanged,
+          // ═══════════════════════════════════════════
+          // 5. LISTA DE MONEDAS
+          // ═══════════════════════════════════════════
+          // EUR
+          _CurrencyRow(
+            icon: Icons.euro,
+            name: 'Euro',
+            source: 'BCV oficial',
+            value: tasa.bcvEur,
+            valueLabel: 'Bs ${tasa.bcvEur != null && tasa.bcvEur! > 0 ? Formatters.formatRate(tasa.bcvEur!) : '—'}',
+          ),
+          // USDT (opacidad reducida)
+          _CurrencyRow(
+            icon: Icons.currency_bitcoin,
+            name: 'USDT',
+            source: 'P2P · referencia',
+            value: tasa.usdtP2P,
+            valueLabel: 'Bs ${tasa.usdtP2P > 0 ? Formatters.formatRate(tasa.usdtP2P) : '—'}',
+            opacity: 0.65,
+          ),
+          // COP
+          _CurrencyRow(
+            icon: Icons.attach_money,
+            name: 'Peso colombiano',
+            source: 'BCV oficial',
+            value: tasa.bcvCop,
+            valueLabel: 'Bs ${tasa.bcvCop != null && tasa.bcvCop! > 0 ? Formatters.formatRate(tasa.bcvCop!) : '—'}',
+          ),
+          // BRL
+          _CurrencyRow(
+            icon: Icons.monetization_on,
+            name: 'Real brasileño',
+            source: 'BCV oficial',
+            value: tasa.bcvBrl,
+            valueLabel: 'Bs ${tasa.bcvBrl != null && tasa.bcvBrl! > 0 ? Formatters.formatRate(tasa.bcvBrl!) : '—'}',
           ),
 
-          // 5. SectionLabel
-          Padding(
-            padding: const EdgeInsets.fromLTRB(14, 9, 14, 4),
-            child: Text(
-              'Otras monedas',
-              style: TextStyle(
-                fontSize: 9,
-                letterSpacing: 0.5,
-                color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
-              ),
-            ),
-          ),
-
-          // 6. RatesGrid
-          _RatesGrid(tasa: tasa),
-
-          // 7. AdBanner
+          // ═══════════════════════════════════════════
+          // 6. AD BANNER
+          // ═══════════════════════════════════════════
           Container(
             height: 52,
             color: theme.cardColor,
@@ -250,6 +483,9 @@ class _HomeContent extends StatelessWidget {
             ),
           ),
 
+          // ═══════════════════════════════════════════
+          // 7. BOTTOM SPACER
+          // ═══════════════════════════════════════════
           const SizedBox(height: 80),
         ],
       ),
@@ -258,366 +494,95 @@ class _HomeContent extends StatelessWidget {
 }
 
 // ─────────────────────────────────────────────────────────────
-// QUICK CALCULATOR (máscara financiera — Regla 12)
+// CURRENCY ROW — estilo ListTile bancario
 // ─────────────────────────────────────────────────────────────
 
-class _QuickCalc extends StatelessWidget {
-  final TextEditingController controller;
-  final bool isUsdInput;
-  final String result;
-  final VoidCallback onSwap;
-  final String Function(String) onMaskChanged;
-
-  const _QuickCalc({
-    required this.controller,
-    required this.isUsdInput,
-    required this.result,
-    required this.onSwap,
-    required this.onMaskChanged,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 10),
-      padding: const EdgeInsets.fromLTRB(11, 9, 11, 9),
-      decoration: BoxDecoration(
-        color: theme.cardColor,
-        borderRadius: BorderRadius.circular(11),
-        border: Border.all(
-          color: theme.colorScheme.onSurface.withValues(alpha: 0.08),
-          width: 0.5,
-        ),
-      ),
-      child: Column(
-        children: [
-          // Fila input
-          Row(
-            children: [
-              SizedBox(
-                width: 24,
-                child: Text(
-                  isUsdInput ? 'USD' : 'Bs',
-                  style: TextStyle(
-                    fontSize: 10,
-                    color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: TextField(
-                  controller: controller,
-                  keyboardType: TextInputType.number,
-                  inputFormatters: [
-                    FilteringTextInputFormatter.allow(RegExp(r'[\d.,]')),
-                  ],
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w500,
-                    fontFamily: 'SpaceMono',
-                    color: theme.colorScheme.primary,
-                  ),
-                  decoration: const InputDecoration(
-                    border: InputBorder.none,
-                    isDense: true,
-                    contentPadding: EdgeInsets.zero,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 4),
-            child: Row(
-              children: [
-                const Expanded(child: Divider(height: 0.5, thickness: 0.5)),
-                const SizedBox(width: 8),
-                GestureDetector(
-                  onTap: onSwap,
-                  child: Container(
-                    width: 28,
-                    height: 28,
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.primary,
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(Icons.swap_vert, color: Colors.white, size: 16),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                const Expanded(child: Divider(height: 0.5, thickness: 0.5)),
-              ],
-            ),
-          ),
-          // Fila resultado
-          Row(
-            children: [
-              SizedBox(
-                width: 24,
-                child: Text(
-                  isUsdInput ? 'Bs' : 'USD',
-                  style: TextStyle(
-                    fontSize: 10,
-                    color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  controller.text.isEmpty ? '0,00' : result,
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w500,
-                    fontFamily: 'SpaceMono',
-                    color: theme.colorScheme.onSurface,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ─────────────────────────────────────────────────────────────
-// HERO CARD
-// ─────────────────────────────────────────────────────────────
-
-class _HeroCard extends StatelessWidget {
-  final double rate;
-  final double? change;
-  final double buyRate;
-  final double sellRate;
-
-  const _HeroCard({
-    required this.rate,
-    this.change,
-    required this.buyRate,
-    required this.sellRate,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-
-    final formatted = Formatters.formatRate(rate);
-    final parts = formatted.split(',');
-    final intPart = parts.isNotEmpty ? parts[0] : '0';
-    final decPart = parts.length > 1 ? parts[1] : '00';
-
-    final String subtitle;
-    if (change != null) {
-      subtitle = 'Bs por 1 USD · ${change! >= 0 ? "▲" : "▼"} ${change!.abs().toStringAsFixed(2)}%';
-    } else {
-      subtitle = 'Bs por 1 USD';
-    }
-
-    return Container(
-      margin: const EdgeInsets.fromLTRB(10, 2, 10, 0),
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1A1A1A) : theme.colorScheme.primary,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: isDark
-              ? theme.colorScheme.onSurface.withValues(alpha: 0.06)
-              : Colors.white.withValues(alpha: 0.08),
-          width: 1,
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'DÓLAR BCV',
-            style: TextStyle(
-              fontSize: 9,
-              letterSpacing: 0.8,
-              color: isDark
-                  ? theme.colorScheme.onSurface.withValues(alpha: 0.5)
-                  : Colors.white.withValues(alpha: 0.75),
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-          const SizedBox(height: 2),
-          RichText(
-            text: TextSpan(
-              style: TextStyle(
-                fontFamily: 'SpaceMono',
-                fontWeight: FontWeight.w500,
-                color: isDark ? theme.colorScheme.onSurface : Colors.white,
-              ),
-              children: [
-                TextSpan(
-                  text: intPart,
-                  style: const TextStyle(fontSize: 36, letterSpacing: -2),
-                ),
-                TextSpan(
-                  text: ',$decPart',
-                  style: TextStyle(
-                    fontSize: 18,
-                    color: isDark
-                        ? theme.colorScheme.onSurface.withValues(alpha: 0.3)
-                        : Colors.white.withValues(alpha: 0.55),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            subtitle,
-            style: TextStyle(
-              fontSize: 10,
-              color: isDark
-                  ? (change != null && change! > 0
-                      ? theme.colorScheme.primary
-                      : theme.colorScheme.onSurface.withValues(alpha: 0.3))
-                  : Colors.white.withValues(alpha: 0.65),
-            ),
-          ),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              _SpreadPill(label: 'Compra', value: buyRate, theme: theme, isDark: isDark),
-              const SizedBox(width: 6),
-              _SpreadPill(label: 'Venta', value: sellRate, theme: theme, isDark: isDark),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _SpreadPill extends StatelessWidget {
-  final String label;
-  final double value;
-  final ThemeData theme;
-  final bool isDark;
-
-  const _SpreadPill({
-    required this.label,
-    required this.value,
-    required this.theme,
-    required this.isDark,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: isDark
-            ? theme.colorScheme.onSurface.withValues(alpha: 0.08)
-            : Colors.white.withValues(alpha: 0.18),
-        borderRadius: BorderRadius.circular(6),
-        border: isDark
-            ? Border.all(color: theme.colorScheme.onSurface.withValues(alpha: 0.06))
-            : null,
-      ),
-      child: Text(
-        '$label: Bs ${Formatters.formatRate(value)}',
-        style: TextStyle(
-          fontSize: 9,
-          color: isDark
-              ? theme.colorScheme.onSurface.withValues(alpha: 0.5)
-              : Colors.white.withValues(alpha: 0.75),
-        ),
-      ),
-    );
-  }
-}
-
-// ─────────────────────────────────────────────────────────────
-// RATES GRID
-// ─────────────────────────────────────────────────────────────
-
-class _RatesGrid extends StatelessWidget {
-  final TasaModel tasa;
-  const _RatesGrid({required this.tasa});
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(5, 0, 5, 0),
-      child: GridView(
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2,
-          mainAxisSpacing: 5,
-          crossAxisSpacing: 5,
-          childAspectRatio: 2.6,
-        ),
-        children: [
-          _RateCard(name: 'EUR/BCV', value: tasa.bcvEur, theme: theme, isDark: isDark),
-          _RateCard(name: 'COP', value: tasa.bcvCop, theme: theme, isDark: isDark),
-          _RateCard(name: 'USDT', value: tasa.usdtP2P, theme: theme, isDark: isDark),
-          _RateCard(name: 'BRL', value: tasa.bcvBrl, theme: theme, isDark: isDark),
-        ],
-      ),
-    );
-  }
-}
-
-class _RateCard extends StatelessWidget {
+class _CurrencyRow extends StatelessWidget {
+  final IconData icon;
   final String name;
+  final String source;
   final double? value;
-  final ThemeData theme;
-  final bool isDark;
+  final String valueLabel;
+  final double opacity;
 
-  const _RateCard({
+  const _CurrencyRow({
+    required this.icon,
     required this.name,
+    required this.source,
     required this.value,
-    required this.theme,
-    required this.isDark,
+    required this.valueLabel,
+    this.opacity = 1.0,
   });
 
   @override
   Widget build(BuildContext context) {
-    final hasData = value != null && value! > 0;
+    final theme = Theme.of(context);
 
-    return Container(
-      height: 80,
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: theme.cardColor,
-        borderRadius: BorderRadius.circular(9),
-        border: isDark
-            ? Border.all(color: theme.colorScheme.onSurface.withValues(alpha: 0.06))
-            : null,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            name,
-            style: TextStyle(
-              fontSize: 11,
-              color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
-            ),
+    return Opacity(
+      opacity: opacity,
+      child: Container(
+        margin: const EdgeInsets.fromLTRB(12, 0, 12, 2.5),
+        padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+        decoration: BoxDecoration(
+          color: theme.cardColor,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: theme.colorScheme.onSurface.withValues(alpha: 0.06),
+            width: 0.5,
           ),
-          const SizedBox(height: 4),
-          Text(
-            hasData ? 'Bs ${Formatters.formatRate(value!)}' : 'N/D',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: theme.colorScheme.onSurface,
+        ),
+        child: Row(
+          children: [
+            // Icono
+            Container(
+              width: 32,
+              height: 32,
+              decoration: BoxDecoration(
+                color: const Color(0xFFF5F5F5),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(
+                icon,
+                size: 18,
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+              ),
             ),
-          ),
-        ],
+            const SizedBox(width: 10),
+            // Nombre + fuente
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    name,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                      color: theme.colorScheme.onSurface,
+                    ),
+                  ),
+                  Text(
+                    source,
+                    style: TextStyle(
+                      fontSize: 10,
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.45),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            // Valor
+            Text(
+              valueLabel,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                fontFamily: 'SpaceMono',
+                color: theme.colorScheme.onSurface,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -643,7 +608,9 @@ class _ErrorView extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.cloud_off, size: 56, color: theme.colorScheme.onSurface.withValues(alpha: 0.4)),
+            Icon(Icons.cloud_off,
+                size: 56,
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.4)),
             const SizedBox(height: 16),
             Text(
               message,
