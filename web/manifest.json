@@ -4,8 +4,8 @@
     "start_url": "/",
     "id": "/",
     "display": "standalone",
-    "background_color": "#006847",
-    "theme_color": "#006847",
+    "background_color": "#E53935",
+    "theme_color": "#E53935",
     "description": "Consulta la tasa BCV del dólar y euro en tiempo real. Calculadora y historial para Venezuela.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
@@ -13,7 +13,7 @@
         "finance",
         "utilities"
     ],
-    "lang": "es",
+    "lang": "es-VE",
     "scope": "/",
     "screenshots": [
         {
