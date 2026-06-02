@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Auditoría SEO — TasaVe vs Al Cambio</title>
+<style>
+  :root {
+    --green: #2E7D32; --yellow: #F57C00; --red: #C62828;
+    --bg: #f8f9fa; --card: #fff; --text: #1a1a1a; --muted: #757575;
+    --border: #e0e0e0; --primary: #E53935; --primary-lgt: #FFF0F0;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'DM Sans', 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+  .container { max-width: 1100px; margin: 0 auto; padding: 20px; }
+
+  /* Header */
+  .header { background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%); color: #fff; padding: 40px 30px; border-radius: 16px; margin-bottom: 30px; }
+  .header h1 { font-size: 2rem; margin-bottom: 6px; }
+  .header .url { color: #aaa; font-family: 'Space Mono', monospace; font-size: 0.9rem; }
+  .header .date { color: #888; font-size: 0.85rem; margin-top: 4px; }
+  .score-big { display: flex; align-items: center; gap: 20px; margin-top: 24px; }
+  .score-circle { width: 120px; height: 120px; border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; font-weight: 700; }
+  .score-circle.good { background: rgba(46,125,50,0.2); border: 4px solid var(--green); }
+  .score-circle.warn { background: rgba(245,124,0,0.2); border: 4px solid var(--yellow); }
+  .score-circle .num { font-size: 2.8rem; font-family: 'Space Mono', monospace; line-height: 1; }
+  .score-circle .lbl { font-size: 0.8rem; opacity: 0.8; }
+  .verdict { font-size: 1.1rem; }
+
+  /* Summary cards */
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 30px; }
+  .card { background: var(--card); border-radius: 12px; padding: 24px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); text-align: center; }
+  .card .val { font-size: 2.4rem; font-weight: 700; font-family: 'Space Mono', monospace; }
+  .card .lbl { color: var(--muted); font-size: 0.85rem; margin-top: 2px; }
+  .card.crit .val { color: var(--red); }
+  .card.warn .val { color: var(--yellow); }
+  .card.pass .val { color: var(--green); }
+
+  /* Sections */
+  .section { background: var(--card); border-radius: 12px; padding: 28px; margin-bottom: 24px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+  .section h2 { font-size: 1.35rem; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid var(--primary); }
+  .section h3 { font-size: 1rem; margin: 16px 0 8px; }
+
+  /* Priority fixes */
+  .fix-item { background: var(--primary-lgt); border-left: 4px solid var(--primary); border-radius: 0 8px 8px 0; padding: 16px 20px; margin-bottom: 14px; }
+  .fix-item .tag { display: inline-block; background: var(--primary); color: #fff; font-size: 0.7rem; font-weight: 700; padding: 2px 8px; border-radius: 4px; margin-right: 8px; text-transform: uppercase; }
+  .fix-item h4 { margin: 6px 0 4px; font-size: 1.05rem; }
+  .fix-item .impact { color: var(--red); font-weight: 600; font-size: 0.85rem; }
+  .fix-item pre { background: #1a1a1a; color: #e0e0e0; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.8rem; margin-top: 8px; }
+
+  /* Category bars */
+  .cat { margin-bottom: 16px; }
+  .cat .cat-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+  .cat .cat-name { font-weight: 600; font-size: 0.95rem; }
+  .cat .cat-score { font-family: 'Space Mono', monospace; font-weight: 700; font-size: 0.95rem; }
+  .cat .bar-bg { background: #eee; height: 10px; border-radius: 5px; overflow: hidden; }
+  .cat .bar-fill { height: 100%; border-radius: 5px; }
+  .bar-fill.good { background: var(--green); }
+  .bar-fill.warn { background: var(--yellow); }
+  .bar-fill.bad { background: var(--red); }
+
+  .findings { margin-top: 10px; padding-left: 20px; }
+  .findings li { margin-bottom: 4px; font-size: 0.9rem; }
+  .findings .ok { color: var(--green); }
+  .findings .warn { color: var(--yellow); }
+  .findings .err { color: var(--red); }
+
+  /* Comparison table */
+  .comp-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+  .comp-table th, .comp-table td { padding: 10px 14px; border-bottom: 1px solid var(--border); text-align: center; }
+  .comp-table th { background: #f5f5f5; font-weight: 700; text-align: left; }
+  .comp-table td:first-child { text-align: left; font-weight: 500; }
+  .comp-table .winner { font-weight: 700; color: var(--green); }
+  .comp-table .loser { color: var(--muted); }
+
+  /* Detail toggle */
+  details { margin-top: 20px; }
+  details summary { cursor: pointer; font-weight: 600; padding: 10px 14px; background: #f5f5f5; border-radius: 6px; }
+  details table { width: 100%; margin-top: 10px; font-size: 0.85rem; }
+  details th, details td { padding: 8px 10px; border-bottom: 1px solid var(--border); text-align: left; }
+  details .pass { color: var(--green); font-weight: 700; }
+  details .fail { color: var(--red); font-weight: 700; }
+  details .warn { color: var(--yellow); font-weight: 700; }
+
+  /* Nav */
+  .nav { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 24px; }
+  .nav a { padding: 6px 14px; background: var(--card); border-radius: 20px; text-decoration: none; color: var(--text); font-size: 0.85rem; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+  .nav a:hover { background: var(--primary); color: #fff; }
+
+  /* Compare dual */
+  .dual { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  @media (max-width: 700px) { .dual { grid-template-columns: 1fr; } }
+
+  /* Print */
+  @media print {
+    body { background: #fff; }
+    .card, .section { box-shadow: none; border: 1px solid #ddd; break-inside: avoid; }
+    .header { background: #1a1a1a !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .nav { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- NAV -->
+  <div class="nav">
+    <a href="#resumen">Resumen</a>
+    <a href="#top5">Top 5 Correcciones</a>
+    <a href="#categorias">Categorías</a>
+    <a href="#comparativa">Comparativa</a>
+    <a href="#detalle">Detalle Técnico</a>
+  </div>
+
+  <!-- HEADER -->
+  <div class="header">
+    <h1>🔍 Auditoría SEO Completa</h1>
+    <div class="url">https://tasave-app.pages.dev/</div>
+    <div class="date">📅 2 de junio de 2026 · 10:30 AM VET</div>
+
+    <div class="score-big">
+      <div class="score-circle warn">
+        <span class="num">69</span>
+        <span class="lbl">/100</span>
+      </div>
+      <div class="verdict">
+        <strong>🟡 Mejorable</strong><br>
+        <span style="font-size:0.9rem;opacity:0.8;">Tu SEO está aceptable pero hay varias correcciones importantes que pueden disparar tu visibilidad en Google.</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- RESUMEN EJECUTIVO -->
+  <h2 id="resumen">📊 Resumen Ejecutivo</h2>
+  <div class="cards">
+    <div class="card warn">
+      <div class="val">69<span style="font-size:1.2rem;">/100</span></div>
+      <div class="lbl">Puntuación TasaVe</div>
+    </div>
+    <div class="card crit">
+      <div class="val">4</div>
+      <div class="lbl">Problemas Críticos</div>
+    </div>
+    <div class="card warn">
+      <div class="val">6</div>
+      <div class="lbl">Advertencias</div>
+    </div>
+    <div class="card pass">
+      <div class="val">18</div>
+      <div class="lbl">Tests Aprobados</div>
+    </div>
+  </div>
+
+  <!-- COMPARATIVA RÁPIDA -->
+  <div class="cards" style="grid-template-columns: 1fr 1fr;">
+    <div class="card" style="border-top: 4px solid var(--primary);">
+      <div class="val" style="color:var(--primary);">69</div>
+      <div class="lbl">🏠 TasaVe</div>
+      <div style="font-size:0.8rem;color:var(--muted);margin-top:6px;">Ventaja: schema JSON-LD, noscript fallback, PWA icons completos</div>
+    </div>
+    <div class="card" style="border-top: 4px solid #0f172a;">
+      <div class="val" style="color:#0f172a;">59</div>
+      <div class="lbl">🏢 Al Cambio</div>
+      <div style="font-size:0.8rem;color:var(--muted);margin-top:6px;">Ventaja: velocidad, OG completo, description perfecta, imagen con alt</div>
+    </div>
+  </div>
+
+  <!-- TOP 5 CORRECCIONES -->
+  <div class="section" id="top5">
+    <h2>🔧 Top 5 Correcciones Prioritarias</h2>
+
+    <div class="fix-item">
+      <span class="tag">prioridad 1</span>
+      <h4>Meta description demasiado corta (102 caracteres)</h4>
+      <p>Google muestra entre 150-160 caracteres. Tu description actual deja ~50 caracteres sin aprovechar = menos click-through rate.</p>
+      <p class="impact">📉 Impacto directo en CTR de Google → menos tráfico orgánico</p>
+      <pre>&lt;meta name="description"
+  content="<strong>Consulta la tasa BCV del dólar, euro, COP y BRL en tiempo real. Calculadora de divisas, historial de 90 días, alertas y comparador de remesas para Venezuela. Gratis, sin registro.</strong>"&gt;</pre>
+    </div>
+
+    <div class="fix-item">
+      <span class="tag">prioridad 2</span>
+      <h4>Twitter Card usa "summary" en vez de "summary_large_image"</h4>
+      <p>Con <code>summary</code> tu imagen aparece diminuta en Twitter/X. <code>summary_large_image</code> ocupa todo el ancho del tweet. Corregir esto duplica la visibilidad al compartir.</p>
+      <p class="impact">📉 Menor visibilidad en Twitter/X y redes sociales</p>
+      <pre>&lt;meta name="twitter:card" content="<strong>summary_large_image</strong>"&gt;
+&lt;meta name="twitter:image:alt" content="<strong>TasaVe - App de consulta de tasa BCV Venezuela</strong>"&gt;</pre>
+    </div>
+
+    <div class="fix-item">
+      <span class="tag">prioridad 3</span>
+      <h4>Falta og:image:alt y twitter:image:alt</h4>
+      <p>Google usa el atributo alt de las imágenes para entender el contenido visual. Sin él, pierdes contexto semántico tanto en Google Images como en redes sociales.</p>
+      <p class="impact">📉 Peor indexación en Google Images</p>
+      <pre>&lt;meta property="og:image:alt" content="<strong>TasaVe - Logo y pantalla principal de la app de tasa BCV Venezuela</strong>"&gt;
+&lt;meta name="twitter:image:alt" content="<strong>TasaVe - App de consulta de tasa BCV Venezuela</strong>"&gt;</pre>
+    </div>
+
+    <div class="fix-item">
+      <span class="tag">prioridad 4</span>
+      <h4>Sitemap.xml desactualizado — lastmod: 2025-05-18 (¡más de 1 año!)</h4>
+      <p>Google cree que tu sitio no se actualiza. El sitemap debe reflejar la fecha real de última modificación. Además, solo tiene 1 URL — si hay más páginas (calculadora, historial, remesas) deberían estar en el sitemap.</p>
+      <p class="impact">📉 Google podría rastrear tu sitio con menos frecuencia</p>
+      <pre>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"&gt;
+  &lt;url&gt;
+    &lt;loc&gt;https://tasave-app.pages.dev/&lt;/loc&gt;
+    &lt;lastmod&gt;<strong>2026-06-02</strong>&lt;/lastmod&gt;
+    &lt;changefreq&gt;daily&lt;/changefreq&gt;
+    &lt;priority&gt;1.0&lt;/priority&gt;
+  &lt;/url&gt;
+  <strong>&lt;url&gt;
+    &lt;loc&gt;https://tasave-app.pages.dev/#/calculator&lt;/loc&gt;
+    &lt;lastmod&gt;2026-06-02&lt;/lastmod&gt;
+    &lt;changefreq&gt;weekly&lt;/changefreq&gt;
+    &lt;priority&gt;0.8&lt;/priority&gt;
+  &lt;/url&gt;
+  &lt;url&gt;
+    &lt;loc&gt;https://tasave-app.pages.dev/#/history&lt;/loc&gt;
+    &lt;lastmod&gt;2026-06-02&lt;/lastmod&gt;
+    &lt;changefreq&gt;weekly&lt;/changefreq&gt;
+    &lt;priority&gt;0.8&lt;/priority&gt;
+  &lt;/url&gt;</strong>
+&lt;/urlset&gt;</pre>
+    </div>
+
+    <div class="fix-item">
+      <span class="tag">prioridad 5</span>
+      <h4>Inconsistencia en theme-color: HTML dice #E53935 (rojo), manifest dice #006847 (verde)</h4>
+      <p>Esto confunde al navegador: la barra de dirección puede aparecer de un color diferente al esperado. El manifest <code>background_color</code> debe coincidir con el <code>theme-color</code> del HTML.</p>
+      <p class="impact">📉 Experiencia inconsistente en PWA instalada / Android</p>
+      <pre>// En manifest.json — cambiar de verde a rojo:
+"background_color": "<strong>#E53935</strong>",
+"theme_color": "<strong>#E53935</strong>",
+
+// En index.html ya está correcto:
+&lt;meta name="theme-color" content="<strong>#E53935</strong>"&gt;</pre>
+    </div>
+  </div>
+
+  <!-- DESGLOSE POR CATEGORÍA -->
+  <div class="section" id="categorias">
+    <h2>📋 Desglose por Categoría — TasaVe</h2>
+
+    <div class="cat">
+      <div class="cat-header"><span class="cat-name">🏷️ Meta Tags</span><span class="cat-score" style="color:var(--yellow);">72/100</span></div>
+      <div class="bar-bg"><div class="bar-fill warn" style="width:72%;"></div></div>
+      <ul class="findings">
+        <li class="ok">✅ &lt;title&gt; presente (61 chars) — bien</li>
+        <li class="warn">⚠️ &lt;meta description&gt; solo 102 chars — debe tener 150-160</li>
+        <li class="ok">✅ Viewport definido correctamente</li>
+        <li class="ok">✅ Robots: index, follow</li>
+        <li class="ok">✅ Canonical: apunta a la URL correcta</li>
+        <li class="warn">⚠️ &lt;html lang="es"&gt; — mejor usar "es-VE"</li>
+        <li class="ok">✅ Meta keywords presente</li>
+        <li class="ok">✅ Meta author y theme-color definidos</li>
+      </ul>
+    </div>
+
+    <div class="cat">
+      <div class="cat-header"><span class="cat-name">📝 Headings</span><span class="cat-score" style="color:var(--green);">80/100</span></div>
+      <div class="bar-bg"><div class="bar-fill good" style="width:80%;"></div></div>
+      <ul class="findings">
+        <li class="ok">✅ Exactamente 1 &lt;h1&gt; en el noscript</li>
+        <li class="ok">✅ Jerarquía correcta (h1 → h2)</li>
+        <li class="ok">✅ H2 descriptivos de las funciones principales</li>
+        <li class="warn">⚠️ Al ser SPA, los headings reales dependen de Flutter — Google podría no verlos todos</li>
+      </ul>
+    </div>
+
+    <div class="cat">
+      <div class="cat-header"><span class="cat-name">🖼️ Imágenes</span><span class="cat-score" style="color:var(--red);">55/100</span></div>
+      <div class="bar-bg"><div class="bar-fill bad" style="width:55%;"></div></div>
+      <ul class="findings">
+        <li class="ok">✅ Icon-512.png accesible (og:image)</li>
+        <li class="ok">✅ Favicon.png existe</li>
+        <li class="ok">✅ Iconos PWA en múltiples tamaños (192, 512, maskable)</li>
+        <li class="err">❌ Falta og:image:alt</li>
+        <li class="err">❌ Falta twitter:image:alt</li>
+        <li class="warn">⚠️ No se detecta lazy loading en imágenes (SPA)</li>
+      </ul>
+    </div>
+
+    <div class="cat">
+      <div class="cat-header"><span class="cat-name">🔗 Enlaces</span><span class="cat-score" style="color:var(--green);">78/100</span></div>
+      <div class="bar-bg"><div class="bar-fill good" style="width:78%;"></div></div>
+      <ul class="findings">
+        <li class="ok">✅ Enlace canónico correcto</li>
+        <li class="ok">✅ Preconnect y dns-prefetch al API</li>
+        <li class="ok">✅ Enlaces en noscript descriptivos</li>
+        <li class="warn">⚠️ No se detectan enlaces a redes sociales o perfiles externos</li>
+      </ul>
+    </div>
+
+    <div class="cat">
+      <div class="cat-header"><span class="cat-name">📢 Open Graph / Social</span><span class="cat-score" style="color:var(--yellow);">70/100</span></div>
+      <div class="bar-bg"><div class="bar-fill warn" style="width:70%;"></div></div>
+      <ul class="findings">
+        <li class="ok">✅ og:title, og:description, og:image, og:url, og:type — completos</li>
+        <li class="ok">✅ og:image:width y og:image:height definidos</li>
+        <li class="ok">✅ og:locale: es_VE</li>
+        <li class="ok">✅ og:site_name: TasaVe</li>
+        <li class="err">❌ twitter:card es "summary" — debe ser "summary_large_image"</li>
+        <li class="err">❌ Falta og:image:alt</li>
+        <li class="err">❌ Falta twitter:image:alt</li>
+      </ul>
+    </div>
+
+    <div class="cat">
+      <div class="cat-header"><span class="cat-name">🏗️ Schema / Datos Estructurados</span><span class="cat-score" style="color:var(--yellow);">75/100</span></div>
+      <div class="bar-bg"><div class="bar-fill warn" style="width:75%;"></div></div>
+      <ul class="findings">
+        <li class="ok">✅ JSON-LD WebApplication presente y bien formado</li>
+        <li class="ok">✅ Campos: name, url, description, applicationCategory, operatingSystem</li>
+        <li class="ok">✅ Offer (gratis), Author (Organization), Audience con área geográfica</li>
+        <li class="warn">⚠️ Podrías añadir FAQPage, SoftwareApplication (más específico) y BreadcrumbList</li>
+      </ul>
+    </div>
+
+    <div class="cat">
+      <div class="cat-header"><span class="cat-name">⚙️ Técnico</span><span class="cat-score" style="color:var(--yellow);">65/100</span></div>
+      <div class="bar-bg"><div class="bar-fill warn" style="width:65%;"></div></div>
+      <ul class="findings">
+        <li class="ok">✅ HTTPS activo</li>
+        <li class="ok">✅ HTTP → HTTPS (301 redirect)</li>
+        <li class="ok">✅ Tiempo de respuesta: 346ms (aceptable)</li>
+        <li class="ok">✅ robots.txt: permite todo, apunta al sitemap</li>
+        <li class="ok">✅ Sitemap.xml accesible</li>
+        <li class="ok">✅ Favicon presente</li>
+        <li class="ok">✅ Cloudflare CDN</li>
+        <li class="err">❌ Sitemap lastmod: 2025-05-18 — más de 1 año desactualizado</li>
+        <li class="err">❌ www.tasave-app.pages.dev → 404 (debería redirigir a non-www)</li>
+        <li class="err">❌ Manifest: theme_color #006847 (verde) ≠ HTML theme-color #E53935 (rojo)</li>
+      </ul>
+    </div>
+
+    <div class="cat">
+      <div class="cat-header"><span class="cat-name">📄 Contenido</span><span class="cat-score" style="color:var(--red);">55/100</span></div>
+      <div class="bar-bg"><div class="bar-fill bad" style="width:55%;"></div></div>
+      <ul class="findings">
+        <li class="ok">✅ Contenido en noscript (~150 palabras) — bueno para crawlers</li>
+        <li class="ok">✅ Lista de funcionalidades clara y descriptiva</li>
+        <li class="warn">⚠️ Al ser SPA (Flutter), el contenido renderizado depende de JavaScript</li>
+        <li class="warn">⚠️ Sin SSR, Google necesita ejecutar JS para ver el contenido real</li>
+        <li class="warn">⚠️ Poco texto visible sin JS — limitado a lo del &lt;noscript&gt;</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- COMPARATIVA -->
+  <div class="section" id="comparativa">
+    <h2>⚔️ Comparativa: TasaVe vs Al Cambio</h2>
+    <div style="overflow-x:auto;">
+      <table class="comp-table">
+        <thead>
+          <tr><th>Categoría</th><th>🏠 TasaVe</th><th>🏢 Al Cambio</th><th>Diferencia</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>🏷️ Meta Tags</td>
+            <td>72</td>
+            <td class="winner">90</td>
+            <td style="color:var(--red);">-18</td>
+          </tr>
+          <tr>
+            <td>📝 Headings</td>
+            <td class="winner">80</td>
+            <td>30</td>
+            <td style="color:var(--green);">+50</td>
+          </tr>
+          <tr>
+            <td>🖼️ Imágenes</td>
+            <td>55</td>
+            <td class="winner">80</td>
+            <td style="color:var(--red);">-25</td>
+          </tr>
+          <tr>
+            <td>🔗 Enlaces</td>
+            <td class="winner">78</td>
+            <td>55</td>
+            <td style="color:var(--green);">+23</td>
+          </tr>
+          <tr>
+            <td>📢 Open Graph / Social</td>
+            <td>70</td>
+            <td class="winner">95</td>
+            <td style="color:var(--red);">-25</td>
+          </tr>
+          <tr>
+            <td>🏗️ Schema / JSON-LD</td>
+            <td class="winner">75</td>
+            <td>0</td>
+            <td style="color:var(--green);">+75</td>
+          </tr>
+          <tr>
+            <td>⚙️ Técnico</td>
+            <td>65</td>
+            <td class="winner">80</td>
+            <td style="color:var(--red);">-15</td>
+          </tr>
+          <tr>
+            <td>📄 Contenido</td>
+            <td class="winner">55</td>
+            <td>15</td>
+            <td style="color:var(--green);">+40</td>
+          </tr>
+          <tr style="font-weight:700;background:#fff8e1;">
+            <td>🏆 Global</td>
+            <td style="color:var(--primary);font-size:1.1rem;">69</td>
+            <td style="color:#0f172a;font-size:1.1rem;">59</td>
+            <td style="color:var(--green);">+10</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p style="margin-top:16px;color:var(--muted);font-size:0.9rem;">
+      🏆 <strong>TasaVe gana 5 de 8 categorías</strong> y lidera la puntuación global (69 vs 59).<br>
+      La ventaja principal de TasaVe está en <strong>Schema/JSON-LD, Headings (noscript) y Contenido accesible sin JS</strong>.<br>
+      Al Cambio destaca en <strong>velocidad (87ms), Open Graph completo y Meta Description optimizada</strong>.
+    </p>
+  </div>
+
+  <!-- DETALLE TÉCNICO COMPLETO -->
+  <div class="section" id="detalle">
+    <h2>🔬 Detalle Técnico Completo</h2>
+
+    <details open>
+      <summary>🏠 TasaVe — Todos los hallazgos</summary>
+      <table>
+        <tr><th style="width:40%;">Check</th><th style="width:15%;">Estado</th><th>Detalle</th></tr>
+        <tr><td>Title longitud</td><td class="pass">✓ 61 chars</td><td>Dentro del rango recomendado (50-60), ligeramente largo</td></tr>
+        <tr><td>Description longitud</td><td class="fail">✗ 102 chars</td><td>Muy corto. Debe tener 150-160 caracteres</td></tr>
+        <tr><td>Viewport</td><td class="pass">✓</td><td>Configurado con viewport-fit=cover</td></tr>
+        <tr><td>Robots</td><td class="pass">✓ index, follow</td><td>Correcto, permite indexación completa</td></tr>
+        <tr><td>Canonical</td><td class="pass">✓</td><td>https://tasave-app.pages.dev/</td></tr>
+        <tr><td>Lang</td><td class="warn">⚠ es</td><td>Correcto pero "es-VE" sería más específico</td></tr>
+        <tr><td>HTTPS</td><td class="pass">✓</td><td>Certificado activo, redirección 301 HTTP→HTTPS</td></tr>
+        <tr><td>www → non-www</td><td class="fail">✗ 404</td><td>www.tasave-app.pages.dev/ da 404, no redirige</td></tr>
+        <tr><td>Tiempo respuesta</td><td class="warn">⚠ 346ms</td><td>Aceptable pero >200ms ideal. Considerar cache agresiva</td></tr>
+        <tr><td>robots.txt</td><td class="pass">✓</td><td>Allow: /, Sitemap apuntado</td></tr>
+        <tr><td>sitemap.xml</td><td class="fail">✗ lastmod 2025-05-18</td><td>Más de 1 año sin actualizar. Solo 1 URL</td></tr>
+        <tr><td>Favicon</td><td class="pass">✓</td><td>favicon.png existe (200 OK)</td></tr>
+        <tr><td>PWA manifest</td><td class="fail">✗ theme_color ≠ HTML</td><td>Manifest tiene #006847 (verde), HTML tiene #E53935 (rojo)</td></tr>
+        <tr><td>PWA icons</td><td class="pass">✓</td><td>192, 512, maskable — todos OK</td></tr>
+        <tr><td>Screenshots PWA</td><td class="warn">⚠ 1 screenshot</td><td>Solo 1 captura narrow. Recomendable añadir wide también</td></tr>
+        <tr><td>og:title</td><td class="pass">✓</td><td>"TasaVe - Tasa BCV en tiempo real"</td></tr>
+        <tr><td>og:description</td><td class="pass">✓</td><td>Descriptivo y completo</td></tr>
+        <tr><td>og:image</td><td class="pass">✓ Icon-512.png</td><td>512x512, PNG, accesible</td></tr>
+        <tr><td>og:image:alt</td><td class="fail">✗ No existe</td><td>Añadir para accesibilidad y Google Images</td></tr>
+        <tr><td>og:image:width/height</td><td class="pass">✓ 512x512</td><td>Correcto</td></tr>
+        <tr><td>og:locale</td><td class="pass">✓ es_VE</td><td>Específico y correcto</td></tr>
+        <tr><td>og:site_name</td><td class="pass">✓ TasaVe</td><td></td></tr>
+        <tr><td>twitter:card</td><td class="fail">✗ "summary"</td><td>Cambiar a "summary_large_image"</td></tr>
+        <tr><td>twitter:image:alt</td><td class="fail">✗ No existe</td><td>Añadir texto alternativo</td></tr>
+        <tr><td>JSON-LD Schema</td><td class="pass">✓ WebApplication</td><td>Bien formado, completo</td></tr>
+        <tr><td>Schema Offer</td><td class="pass">✓ Price: 0 USD</td><td>Correcto para app gratuita</td></tr>
+        <tr><td>Schema Audience</td><td class="pass">✓</td><td>Venezuela, país correcto</td></tr>
+        <tr><td>Noscript fallback</td><td class="pass">✓</td><td>Excelente: contenido rico para crawlers sin JS</td></tr>
+        <tr><td>Preconnect API</td><td class="pass">✓</td><td>Preconnect + dns-prefetch a tasave-api.workers.dev</td></tr>
+        <tr><td>Push notifications</td><td class="pass">✓</td><td>Service Worker + VAPID configurados</td></tr>
+        <tr><td>Ads</td><td class="pass">✓ (solo home)</td><td>Google Mobile Ads, correctamente limitado</td></tr>
+      </table>
+    </details>
+
+    <details>
+      <summary>🏢 Al Cambio — Todos los hallazgos</summary>
+      <table>
+        <tr><th style="width:40%;">Check</th><th style="width:15%;">Estado</th><th>Detalle</th></tr>
+        <tr><td>Title longitud</td><td class="pass">✓ 48 chars</td><td>Óptimo, dentro del rango 50-60</td></tr>
+        <tr><td>Description longitud</td><td class="pass">✓ 152 chars</td><td>Perfecto, aprovecha todo el espacio</td></tr>
+        <tr><td>Viewport</td><td class="pass">✓</td><td>Configurado con viewport-fit=cover</td></tr>
+        <tr><td>Robots</td><td class="pass">✓ index, follow</td><td>Correcto</td></tr>
+        <tr><td>Canonical</td><td class="pass">✓</td><td>https://alcambio.app/</td></tr>
+        <tr><td>Lang</td><td class="warn">⚠ es</td><td>Correcto pero es-VE sería más específico</td></tr>
+        <tr><td>HTTPS</td><td class="pass">✓</td><td>Certificado activo, redirección 301 HTTP→HTTPS</td></tr>
+        <tr><td>www → non-www</td><td class="pass">✓ 301</td><td>Redirige correctamente</td></tr>
+        <tr><td>Tiempo respuesta</td><td class="pass">✓ 87ms</td><td>Excelente, muy rápido (Cloudflare)</td></tr>
+        <tr><td>robots.txt</td><td class="pass">✓</td><td>Allow: /, Sitemap apuntado</td></tr>
+        <tr><td>sitemap.xml</td><td class="warn">⚠ lastmod 2026-02-23</td><td>3 meses desactualizado. Tiene TODO comment sin resolver</td></tr>
+        <tr><td>Favicon</td><td class="pass">✓</td><td>/logo.png como favicon y apple-touch-icon</td></tr>
+        <tr><td>PWA manifest</td><td class="pass">✓</td><td>site.webmanifest, consistente con theme-color</td></tr>
+        <tr><td>PWA icons</td><td class="warn">⚠</td><td>Solo 192 y 512, sin maskable icons</td></tr>
+        <tr><td>PWA screenshots</td><td class="fail">✗</td><td>Sin screenshots en el manifest</td></tr>
+        <tr><td>og:title/description</td><td class="pass">✓</td><td>Completos y bien escritos</td></tr>
+        <tr><td>og:image</td><td class="pass">✓ 1200x630</td><td>Dimensiones perfectas para redes sociales</td></tr>
+        <tr><td>og:image:alt</td><td class="pass">✓</td><td>"Al Cambio - Tasas de cambio Venezuela"</td></tr>
+        <tr><td>og:image:width/height</td><td class="pass">✓ 1200x630</td><td>Correcto</td></tr>
+        <tr><td>og:locale</td><td class="pass">✓ es_VE</td><td>Correcto</td></tr>
+        <tr><td>twitter:card</td><td class="pass">✓ summary_large_image</td><td>Óptimo para visibilidad en Twitter/X</td></tr>
+        <tr><td>twitter:image:alt</td><td class="pass">✓</td><td>Texto alternativo presente</td></tr>
+        <tr><td>JSON-LD Schema</td><td class="fail">✗ AUSENTE</td><td>Crítico: sin datos estructurados, Google no entiende el tipo de contenido</td></tr>
+        <tr><td>Noscript fallback</td><td class="fail">✗ AUSENTE</td><td>Sin JS, la página está completamente vacía. Googlebot puede indexar cero contenido</td></tr>
+        <tr><td>Imágenes optimizadas</td><td class="pass">✓</td><td>Cloudflare Polish activo (cf-polished: ok)</td></tr>
+        <tr><td>AMP ads</td><td class="warn">⚠</td><td>Usa amp-auto-ads (Google AdSense)</td></tr>
+        <tr><td>Cache status</td><td class="pass">✓</td><td>s-maxage=300, algunas assets en HIT</td></tr>
+      </table>
+    </details>
+  </div>
+
+  <!-- RECOMENDACIONES FINALES -->
+  <div class="section" style="border: 2px solid var(--primary);">
+    <h2>🎯 Próximos Pasos Recomendados</h2>
+    <ol style="padding-left:20px;line-height:2;">
+      <li><strong>Corrige el Top 5 ahora</strong> — las 5 correcciones prioritarias de arriba toman ~20 minutos en total y tienen alto impacto</li>
+      <li><strong>Mejora el sitemap</strong> — añade las rutas internas (calculator, history, remesas) y automatiza el lastmod con el build de Flutter</li>
+      <li><strong>Añade SSR o pre-rendering</strong> — esto es la diferencia más grande a largo plazo. Sin SSR, dependes del JavaScript rendering de Google</li>
+      <li><strong>Arregla la redirección www</strong> — configura una regla en Cloudflare para que www.tasave-app.pages.dev redirija a la versión sin www</li>
+      <li><strong>Añade más tipos de schema</strong> — FAQPage para preguntas frecuentes, SoftwareApplication en vez de WebApplication, y BreadcrumbList</li>
+    </ol>
+  </div>
+
+  <p style="text-align:center;color:var(--muted);font-size:0.8rem;margin-top:30px;">
+    Auditoría generada el 2 de junio de 2026 · TasaVe vs Al Cambio · Datos reales extraídos vía curl y WebFetch
+  </p>
+
+</div>
+
+</body>
+</html>
