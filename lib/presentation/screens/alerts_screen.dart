@@ -20,15 +20,25 @@ class AlertsScreen extends ConsumerWidget {
         child: ListView(
           padding: EdgeInsets.zero,
           children: [
+            // Header estilo tasave
             Padding(
-              padding: const EdgeInsets.fromLTRB(18, 14, 18, 8),
-              child: Text(
-                'Alertas de tasa',
-                style: GoogleFonts.dmSans(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w700,
-                  color: theme.colorScheme.onSurface,
-                ),
+              padding: const EdgeInsets.fromLTRB(16, 10, 16, 4),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('tasave',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                        letterSpacing: -0.5,
+                        color: theme.colorScheme.primary,
+                      )),
+                  Text('Alertas',
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
+                      )),
+                ],
               ),
             ),
             Padding(
@@ -45,30 +55,74 @@ class AlertsScreen extends ConsumerWidget {
             ),
             if (alerts.isEmpty)
               Padding(
-                padding: const EdgeInsets.fromLTRB(18, 20, 18, 20),
-                child: Center(
-                  child: Column(
-                    children: [
-                      Icon(
-                        Icons.notifications_none,
-                        size: 40,
-                        color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
+                padding: const EdgeInsets.fromLTRB(32, 32, 32, 32),
+                child: Column(
+                  children: [
+                    const Text('🔔', style: TextStyle(fontSize: 48)),
+                    const SizedBox(height: 12),
+                    Text(
+                      'Sin alertas activas',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold,
+                        color: theme.colorScheme.onSurface,
                       ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'No tienes alertas configuradas',
-                        style: GoogleFonts.dmSans(
-                          fontSize: 13,
-                          color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      'Te avisamos cuando la tasa suba o baje\nsegún tu umbral',
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 24),
+                    SizedBox(
+                      width: double.infinity,
+                      child: FilledButton(
+                        onPressed: () => _showNewAlertSheet(context, ref),
+                        style: FilledButton.styleFrom(
+                          backgroundColor: const Color(0xFFE53935),
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: const Text(
+                          '+ Crear mi primera alerta',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ),
-                    ],
-                  ),
+                    ),
+                    const SizedBox(height: 32),
+                    Divider(
+                        height: 1,
+                        thickness: 0.5,
+                        color: theme.colorScheme.onSurface
+                            .withValues(alpha: 0.1)),
+                    Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Text(
+                        'Las alertas te notifican por\npush cuando la tasa BCV\ncambia según tu umbral.',
+                        style: TextStyle(
+                            fontSize: 12,
+                            color: theme.colorScheme.onSurface
+                                .withValues(alpha: 0.35),
+                            height: 1.6),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ],
                 ),
               )
             else
               ...alerts.map((alert) => _AlertTile(alert: alert, ref: ref, theme: theme)),
-            Padding(
+            if (alerts.isNotEmpty)
+              Padding(
               padding: const EdgeInsets.fromLTRB(18, 12, 18, 12),
               child: GestureDetector(
                 onTap: () => _showNewAlertSheet(context, ref),
@@ -101,6 +155,43 @@ class AlertsScreen extends ConsumerWidget {
                 ),
               ),
             ),
+            if (alerts.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(18, 4, 18, 16),
+                child: Container(
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: theme.cardColor,
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: theme.colorScheme.onSurface
+                          .withValues(alpha: 0.06),
+                      width: 0.5,
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.info_outline,
+                          size: 14,
+                          color: theme.colorScheme.onSurface
+                              .withValues(alpha: 0.3)),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Las alertas se notifican por push cuando '
+                          'la tasa BCV alcanza tu umbral.',
+                          style: TextStyle(
+                            fontSize: 11,
+                            height: 1.5,
+                            color: theme.colorScheme.onSurface
+                                .withValues(alpha: 0.35),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
           ],
         ),
       ),

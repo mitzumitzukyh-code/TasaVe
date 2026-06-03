@@ -1,6 +1,8 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:fl_chart/fl_chart.dart';
 import '../../data/models/tasa_model.dart';
 import '../../utils/formatters.dart';
 import '../providers/tasa_provider.dart';
@@ -17,15 +19,50 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   final _controller = TextEditingController();
   bool _isUsdInput = true;
   String _result = '0,00';
+  int? _selectedChip;
+
+  // ── Formateo manual (sin locale — funciona en Flutter Web) ──
+
+  // Formatea con punto de miles y coma decimal: 27898.5 → "27.898,50"
+  String _formatBs(double value) {
+    // Redondear a 2 decimales para evitar imprecisión de punto flotante
+    final rounded = (value * 100).round();
+    final intPart = rounded ~/ 100;
+    final decPart = (rounded % 100).toString().padLeft(2, '0');
+    return '${_addThousands(intPart)},$decPart';
+  }
+
+  // Formatea sin punto de miles y coma decimal: 8.96 → "8,96"
+  String _formatUsd(double value) {
+    final rounded = (value * 100).round();
+    final intPart = rounded ~/ 100;
+    final decPart = (rounded % 100).toString().padLeft(2, '0');
+    return '$intPart,$decPart';
+  }
+
+  // Agrega puntos de miles: 27898 → "27.898"
+  String _addThousands(int n) {
+    final s = n.toString();
+    final buf = StringBuffer();
+    for (int i = 0; i < s.length; i++) {
+      final remaining = s.length - i;
+      if (i > 0 && remaining % 3 == 0) buf.write('.');
+      buf.write(s[i]);
+    }
+    return buf.toString();
+  }
 
   // ── Máscara financiera (Regla 12 CLAUDE.md) ─────────────
 
-  String _applyMask(String raw) {
+  String _applyMask(String raw, {bool withThousands = false}) {
     final digits = raw.replaceAll(RegExp(r'[^0-9]'), '');
     if (digits.isEmpty) return '';
     final value = int.parse(digits);
     final integer = value ~/ 100;
     final decimal = (value % 100).toString().padLeft(2, '0');
+    if (withThousands) {
+      return '${_addThousands(integer)},$decimal';
+    }
     return '$integer,$decimal';
   }
 
@@ -46,18 +83,61 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       return;
     }
 
-    final converted = _isUsdInput ? input * rate : input / rate;
-    _result = Formatters.formatRate(converted);
+    if (_isUsdInput) {
+      final bsValue = input * rate;
+      _result = _formatBs(bsValue);
+    } else {
+      final usdValue = input / rate;
+      _result = _formatUsd(usdValue);
+    }
   }
 
   void _swap() {
-    final currentText = _controller.text;
+    final tasaAsync = ref.read(tasaProvider);
+    final rate = tasaAsync.whenOrNull(data: (t) => t.bcvUsd) ?? 0;
+
+    // Guardar el resultado actual como nuevo input
+    final currentResult = _result;
+
+    // Cambiar dirección
     _isUsdInput = !_isUsdInput;
-    _controller.text = '';
-    _result = '0,00';
-    if (currentText.isNotEmpty) {
-      _controller.text = currentText;
+
+    // Si había un resultado válido, ponerlo como nuevo input
+    if (currentResult.isNotEmpty && currentResult != '0,00' && rate > 0) {
+      // Convertir el resultado a dígitos para la máscara
+      final cleaned = currentResult
+          .replaceAll('.', '')
+          .replaceAll(',', '.');
+      final value = double.tryParse(cleaned) ?? 0;
+      if (value > 0) {
+        // Convertir a centavos para la máscara financiera
+        final centavos = (value * 100).round();
+        // Si ahora el input es Bs, agregar puntos de miles
+        final masked = _applyMask(centavos.toString(),
+            withThousands: !_isUsdInput);
+        _controller.text = masked;
+        _controller.selection = TextSelection.collapsed(offset: masked.length);
+      } else {
+        _controller.text = '';
+      }
+    } else {
+      _controller.text = '';
     }
+
+    _onInputChanged();
+    setState(() {});
+  }
+
+  void _onQuickAmount(int amount) {
+    _isUsdInput = true;
+    _selectedChip = amount;
+    final centavos = amount * 100;
+    final masked = _applyMask(centavos.toString());
+    _controller.text = masked;
+    _controller.selection =
+        TextSelection.collapsed(offset: masked.length);
+    _onInputChanged();
+    setState(() {});
   }
 
   // ── Lifecycle ───────────────────────────────────────────
@@ -66,6 +146,25 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   void initState() {
     super.initState();
     _controller.addListener(() {
+      final masked = _applyMask(_controller.text,
+          withThousands: !_isUsdInput);
+      if (masked != _controller.text) {
+        _controller.text = masked;
+        _controller.selection =
+            TextSelection.collapsed(offset: masked.length);
+      }
+      if (_controller.text.isEmpty && _selectedChip != null) {
+        _selectedChip = null;
+      }
+      _onInputChanged();
+      setState(() {});
+    });
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _controller.text = '1,00';
+      if (_controller.text.isEmpty && _selectedChip != null) {
+        _selectedChip = null;
+      }
       _onInputChanged();
       setState(() {});
     });
@@ -98,7 +197,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             result: _result,
             onSwap: _swap,
             onMaskChanged: _applyMask,
-            historyAsync: ref.watch(historyProvider(2)),
+            onQuickAmount: _onQuickAmount,
+            selectedChip: _selectedChip,
+            historyAsync: ref.watch(historyProvider(7)),
           ),
         ),
       ),
@@ -117,6 +218,8 @@ class _BankHome extends StatelessWidget {
   final String result;
   final VoidCallback onSwap;
   final String Function(String) onMaskChanged;
+  final void Function(int amount) onQuickAmount;
+  final int? selectedChip;
   final AsyncValue<List<TasaHistoryEntry>> historyAsync;
 
   const _BankHome({
@@ -126,6 +229,8 @@ class _BankHome extends StatelessWidget {
     required this.result,
     required this.onSwap,
     required this.onMaskChanged,
+    required this.onQuickAmount,
+    required this.selectedChip,
     required this.historyAsync,
   });
 
@@ -314,7 +419,7 @@ class _BankHome extends StatelessWidget {
                 Row(
                   children: [
                     SizedBox(
-                      width: 28,
+                      width: 36,
                       child: Text(
                         isUsdInput ? 'USD' : 'Bs',
                         style: TextStyle(
@@ -384,7 +489,7 @@ class _BankHome extends StatelessWidget {
                 Row(
                   children: [
                     SizedBox(
-                      width: 28,
+                      width: 36,
                       child: Text(
                         isUsdInput ? 'Bs' : 'USD',
                         style: TextStyle(
@@ -415,6 +520,55 @@ class _BankHome extends StatelessWidget {
           ),
 
           // ═══════════════════════════════════════════
+          // 3.5. MONTOS RÁPIDOS
+          // ═══════════════════════════════════════════
+          Padding(
+            padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+            child: Wrap(
+              spacing: 6,
+              children: [5, 10, 20, 50, 100, 500].map((amount) {
+                return GestureDetector(
+                  onTap: () {
+                    onQuickAmount(amount);
+                  },
+                  child: () {
+                    final isSelected = selectedChip == amount;
+                    return Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: isSelected
+                            ? const Color(0xFFE53935)
+                            : theme.cardColor,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: isSelected
+                              ? const Color(0xFFE53935)
+                              : theme.colorScheme.onSurface
+                                  .withValues(alpha: 0.12),
+                          width: isSelected ? 1.5 : 0.5,
+                        ),
+                      ),
+                      child: Text(
+                        '\$$amount',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          fontFamily: 'SpaceMono',
+                          color: isSelected
+                              ? Colors.white
+                              : theme.colorScheme.onSurface
+                                  .withValues(alpha: 0.7),
+                        ),
+                      ),
+                    );
+                  }(),
+                );
+              }).toList(),
+            ),
+          ),
+
+          // ═══════════════════════════════════════════
           // 4. SECCIÓN "OTRAS MONEDAS"
           // ═══════════════════════════════════════════
           Padding(
@@ -435,7 +589,7 @@ class _BankHome extends StatelessWidget {
           // ═══════════════════════════════════════════
           // EUR
           _CurrencyRow(
-            icon: Icons.euro,
+            emoji: '🇪🇺',
             name: 'Euro',
             source: 'BCV oficial',
             value: tasa.bcvEur,
@@ -443,7 +597,7 @@ class _BankHome extends StatelessWidget {
           ),
           // USDT (opacidad reducida)
           _CurrencyRow(
-            icon: Icons.toll,
+            emoji: '⚡',
             name: 'USDT',
             source: 'P2P · referencia',
             value: tasa.usdtP2P,
@@ -452,7 +606,7 @@ class _BankHome extends StatelessWidget {
           ),
           // COP
           _CurrencyRow(
-            icon: Icons.attach_money,
+            emoji: '🇨🇴',
             name: 'Peso colombiano',
             source: 'BCV oficial',
             value: tasa.bcvCop,
@@ -460,7 +614,7 @@ class _BankHome extends StatelessWidget {
           ),
           // BRL
           _CurrencyRow(
-            icon: Icons.monetization_on,
+            emoji: '🇧🇷',
             name: 'Real brasileño',
             source: 'BCV oficial',
             value: tasa.bcvBrl,
@@ -468,18 +622,38 @@ class _BankHome extends StatelessWidget {
           ),
 
           // ═══════════════════════════════════════════
+          // 5.5. MINI GRÁFICO HISTORIAL 7 DÍAS
+          // ═══════════════════════════════════════════
+          _MiniChart(historyAsync: historyAsync),
+
+          // ═══════════════════════════════════════════
           // 6. AD BANNER
           // ═══════════════════════════════════════════
           Container(
+            margin: const EdgeInsets.fromLTRB(12, 8, 12, 0),
             height: 52,
-            color: theme.cardColor,
-            alignment: Alignment.center,
-            child: Text(
-              'Publicidad',
-              style: TextStyle(
-                fontSize: 9,
-                color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
+            decoration: BoxDecoration(
+              color: theme.cardColor,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.08),
+                width: 1,
+                style: BorderStyle.solid,
               ),
+            ),
+            alignment: Alignment.center,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.campaign_outlined, size: 14,
+                    color: theme.colorScheme.onSurface
+                        .withValues(alpha: 0.25)),
+                const SizedBox(width: 6),
+                Text('Espacio publicitario',
+                    style: TextStyle(fontSize: 10,
+                        color: theme.colorScheme.onSurface
+                            .withValues(alpha: 0.25))),
+              ],
             ),
           ),
 
@@ -498,7 +672,7 @@ class _BankHome extends StatelessWidget {
 // ─────────────────────────────────────────────────────────────
 
 class _CurrencyRow extends StatelessWidget {
-  final IconData icon;
+  final String emoji;
   final String name;
   final String source;
   final double? value;
@@ -506,7 +680,7 @@ class _CurrencyRow extends StatelessWidget {
   final double opacity;
 
   const _CurrencyRow({
-    required this.icon,
+    required this.emoji,
     required this.name,
     required this.source,
     required this.value,
@@ -533,18 +707,21 @@ class _CurrencyRow extends StatelessWidget {
         ),
         child: Row(
           children: [
-            // Icono
+            // Emoji
             Container(
               width: 32,
               height: 32,
               decoration: BoxDecoration(
-                color: const Color(0xFFF5F5F5),
+                color: theme.brightness == Brightness.dark
+                    ? Colors.white.withValues(alpha: 0.08)
+                    : const Color(0xFFF5F5F5),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: Icon(
-                icon,
-                size: 18,
-                color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+              child: Center(
+                child: Text(
+                  emoji,
+                  style: const TextStyle(fontSize: 18),
+                ),
               ),
             ),
             const SizedBox(width: 10),
@@ -585,6 +762,178 @@ class _CurrencyRow extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
+// MINI CHART — gráfico de 7 días en Home
+// ─────────────────────────────────────────────────────────────
+
+class _MiniChart extends StatelessWidget {
+  final AsyncValue<List<TasaHistoryEntry>> historyAsync;
+
+  const _MiniChart({required this.historyAsync});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return historyAsync.when(
+      loading: () => const SizedBox.shrink(),
+      error: (_, __) => const SizedBox.shrink(),
+      data: (entries) {
+        if (entries.length < 2) return const SizedBox.shrink();
+
+        final sorted = [...entries]..sort((a, b) => a.date.compareTo(b.date));
+        final spots = sorted.asMap().entries
+            .map((e) => FlSpot(e.key.toDouble(), e.value.bcvUsd))
+            .toList();
+
+        final rates = sorted.map((e) => e.bcvUsd).toList();
+        final minRate = rates.reduce(math.min);
+        final maxRate = rates.reduce(math.max);
+        final padding = (maxRate - minRate) * 0.15;
+
+        // Determinar tendencia
+        final first = sorted.first.bcvUsd;
+        final last = sorted.last.bcvUsd;
+        final isUp = last >= first;
+        final pct = first > 0 ? ((last - first) / first * 100) : 0.0;
+
+        return Container(
+          margin: const EdgeInsets.fromLTRB(12, 10, 12, 0),
+          padding: const EdgeInsets.fromLTRB(14, 12, 14, 8),
+          decoration: BoxDecoration(
+            color: theme.cardColor,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.06),
+              width: 0.5,
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'TENDENCIA 7 DÍAS',
+                    style: TextStyle(
+                      fontSize: 9,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 0.5,
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.45),
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: isUp
+                          ? const Color(0xFFE53935).withValues(alpha: 0.1)
+                          : const Color(0xFF43A047).withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      '${isUp ? '▲' : '▼'} ${pct.abs().toStringAsFixed(2)}%',
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w600,
+                        fontFamily: 'SpaceMono',
+                        color: isUp
+                            ? const Color(0xFFE53935)
+                            : const Color(0xFF43A047),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              SizedBox(
+                height: 56,
+                child: LineChart(
+                  LineChartData(
+                    minY: minRate - padding,
+                    maxY: maxRate + padding,
+                    gridData: const FlGridData(show: false),
+                    borderData: FlBorderData(show: false),
+                    titlesData: const FlTitlesData(show: false),
+                    lineTouchData: const LineTouchData(enabled: false),
+                    lineBarsData: [
+                      LineChartBarData(
+                        spots: spots,
+                        isCurved: true,
+                        color: isUp
+                            ? const Color(0xFFE53935)
+                            : const Color(0xFF43A047),
+                        barWidth: 1.5,
+                        dotData: FlDotData(
+                          show: true,
+                          getDotPainter: (spot, pct, bar, idx) {
+                            if (idx != spots.length - 1) {
+                              return FlDotCirclePainter(
+                                  radius: 0, color: Colors.transparent);
+                            }
+                            return FlDotCirclePainter(
+                              radius: 3,
+                              color: isUp
+                                  ? const Color(0xFFE53935)
+                                  : const Color(0xFF43A047),
+                              strokeWidth: 1.5,
+                              strokeColor: Colors.white,
+                            );
+                          },
+                        ),
+                        belowBarData: BarAreaData(
+                          show: true,
+                          gradient: LinearGradient(
+                            colors: [
+                              (isUp
+                                      ? const Color(0xFFE53935)
+                                      : const Color(0xFF43A047))
+                                  .withValues(alpha: 0.12),
+                              Colors.transparent,
+                            ],
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 4),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    _shortDate(sorted.first.date),
+                    style: TextStyle(
+                      fontSize: 9,
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
+                    ),
+                  ),
+                  Text(
+                    _shortDate(sorted.last.date),
+                    style: TextStyle(
+                      fontSize: 9,
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  String _shortDate(DateTime d) {
+    const months = ['ene','feb','mar','abr','may','jun',
+        'jul','ago','sep','oct','nov','dic'];
+    return '${d.day} ${months[d.month - 1]}';
   }
 }
 

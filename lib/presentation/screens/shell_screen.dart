@@ -32,32 +32,78 @@ class _ShellScreenState extends ConsumerState<ShellScreen> {
         index: _currentIndex,
         children: _screens,
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentIndex,
-        onTap: (i) => setState(() => _currentIndex = i),
-        backgroundColor: theme.scaffoldBackgroundColor,
-        selectedItemColor: const Color(0xFFE53935),
-        unselectedItemColor: Colors.grey,
-        type: BottomNavigationBarType.fixed,
-        elevation: 8,
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.bar_chart_outlined),
-            label: 'Historial',
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          color: theme.scaffoldBackgroundColor,
+          border: Border(
+            top: BorderSide(
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.08),
+              width: 0.5,
+            ),
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.document_scanner_outlined),
-            label: 'Escáner',
+        ),
+        child: SafeArea(
+          child: SizedBox(
+            height: 56,
+            child: Row(
+              children: List.generate(4, (i) {
+                final isActive = _currentIndex == i;
+                final icons = [
+                  Icons.home_outlined,
+                  Icons.document_scanner_outlined,
+                  Icons.notifications_outlined,
+                  Icons.settings_outlined,
+                ];
+                final labels = ['Inicio', 'Escáner', 'Alertas', 'Ajustes'];
+                return Expanded(
+                  child: GestureDetector(
+                    onTap: () => setState(() => _currentIndex = i),
+                    behavior: HitTestBehavior.opaque,
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      margin: const EdgeInsets.symmetric(
+                          horizontal: 6, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: isActive
+                            ? const Color(0xFFE53935)
+                                .withValues(alpha: 0.1)
+                            : Colors.transparent,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            icons[i],
+                            size: 20,
+                            color: isActive
+                                ? const Color(0xFFE53935)
+                                : theme.colorScheme.onSurface
+                                    .withValues(alpha: 0.4),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            labels[i],
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: isActive
+                                  ? FontWeight.w600
+                                  : FontWeight.w400,
+                              color: isActive
+                                  ? const Color(0xFFE53935)
+                                  : theme.colorScheme.onSurface
+                                      .withValues(alpha: 0.4),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              }),
+            ),
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.notifications_outlined),
-            label: 'Alertas',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.settings_outlined),
-            label: 'Ajustes',
-          ),
-        ],
+        ),
       ),
     );
   }

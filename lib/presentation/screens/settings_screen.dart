@@ -19,7 +19,8 @@ class SettingsScreen extends ConsumerWidget {
     final isDark = ref.watch(themeProvider);
     final prefs = ref.watch(sharedPreferencesProvider);
     final defaultRate = prefs.getString(AppConstants.kPrefDefaultRate) ?? 'BCV USD';
-    final decimalFormat = prefs.getString(AppConstants.kPrefDecimalFormat) ?? 'Coma (,)';
+    final rawFormat = prefs.getString(AppConstants.kPrefDecimalFormat) ?? 'Coma (,)';
+    final decimalFormat = rawFormat == 'Punto (.)' ? 'Punto (.)' : 'Coma (,)';
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
@@ -27,16 +28,25 @@ class SettingsScreen extends ConsumerWidget {
         child: ListView(
           padding: EdgeInsets.zero,
           children: [
-            // Header
+            // Header estilo tasave
             Padding(
-              padding: const EdgeInsets.fromLTRB(18, 14, 18, 8),
-              child: Text(
-                'Ajustes',
-                style: GoogleFonts.dmSans(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w700,
-                  color: theme.colorScheme.onSurface,
-                ),
+              padding: const EdgeInsets.fromLTRB(16, 10, 16, 4),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('tasave',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                        letterSpacing: -0.5,
+                        color: AppColors.primary,
+                      )),
+                  Text('Ajustes',
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
+                      )),
+                ],
               ),
             ),
 
@@ -96,7 +106,7 @@ class SettingsScreen extends ConsumerWidget {
             ),
             _SettingsRow(
               label: 'Formato de número',
-              sub: 'Separador decimal',
+              sub: 'Separador decimal venezolano',
               value: decimalFormat,
               theme: theme,
               onTap: () => _showDecimalFormatSheet(context, ref),
@@ -140,9 +150,9 @@ class SettingsScreen extends ConsumerWidget {
             ),
             _SettingsRow(
               label: 'Contacto / Soporte',
-              value: 'soporte@tasave.app',
+              value: 'Próximamente',
               theme: theme,
-              onTap: () => _launchUrl('mailto:soporte@tasave.app'),
+              valueColor: theme.colorScheme.onSurface.withValues(alpha: 0.4),
             ),
 
             const SizedBox(height: 40),
@@ -262,6 +272,7 @@ class _SettingsRow extends StatelessWidget {
   final bool showChevron;
   final Color? labelColor;
   final Color? chevronColor;
+  final Color? valueColor;
   final ThemeData theme;
 
   const _SettingsRow({
@@ -273,6 +284,7 @@ class _SettingsRow extends StatelessWidget {
     this.showChevron = true,
     this.labelColor,
     this.chevronColor,
+    this.valueColor,
   });
 
   @override
@@ -329,7 +341,7 @@ class _SettingsRow extends StatelessWidget {
                       value!,
                       style: GoogleFonts.dmSans(
                         fontSize: 12,
-                        color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
+                        color: valueColor ?? theme.colorScheme.onSurface.withValues(alpha: 0.4),
                       ),
                     ),
                   ),
